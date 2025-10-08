@@ -1,7 +1,9 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const { connectDB, sequelize } = require('./config/database');
 const siteRouter = require('./router/siterouter');
+const userRouter = require('./router/siterouter');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -14,15 +16,18 @@ app.set("views", "./src/views");
 app.use(express.static("./src/public"));
 
 //khai bao cors 
-const cors = require("cors");
 app.use(cors());
 
 // Route cơ bản
 app.use('/', siteRouter);
+app.use('/user', userRouter);
 
 
 
-// Khởi động server
-app.listen(port, () => {
-    console.log(`Server đang chạy tại http://localhost:${port}`);
-});
+(async () => {
+    await connectDB();
+    await sequelize.sync({ alter: true }); // tự động tạo bảng nếu chưa có
+    app.listen(port, () => {
+        console.log(`✅ Server chạy tại http://localhost:${port}`);
+    });
+})();
