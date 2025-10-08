@@ -1,0 +1,40 @@
+# =========================
+#  Node.js backend ignore
+# =========================
+
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs
+*.log
+
+# Build output
+dist/
+build/
+tmp/
+.cache/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# VSCode settings
+.vscode/
+.idea/
+
+# OS metadata
+ehthumbs.db
+Desktop.ini
+
+# Optional lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
