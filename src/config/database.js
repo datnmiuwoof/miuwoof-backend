@@ -15,9 +15,9 @@ const sequelize = new Sequelize(
 async function connectDB() {
     try {
         await sequelize.authenticate();
-        console.log('✅ Kết nối cơ sở dữ liệu thành công!');
+        console.log('Kết nối cơ sở dữ liệu thành công!');
     } catch (error) {
-        console.error('❌ Lỗi kết nối cơ sở dữ liệu:', error);
+        console.error('Lỗi kết nối cơ sở dữ liệu:', error);
     }
 }
 
