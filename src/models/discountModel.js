@@ -3,7 +3,7 @@ const { sequelize } = require('../config/database');
 
 const Discount = sequelize.define('Discount', {
     id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.INTEGER.UNSIGNED,
         autoIncrement: true,
         primaryKey: true,
     },
@@ -40,13 +40,17 @@ const Discount = sequelize.define('Discount', {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
     },
+    code: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
     used_quantity: {
         type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0,
     },
-    id_user: {
-        type: DataTypes.INTEGER,
+    user_id: {
+        type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
         references: {
             model: 'user',

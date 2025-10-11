@@ -3,7 +3,7 @@ const { sequelize } = require('../config/database');
 
 const PostCategory = sequelize.define('PostCategory', {
     id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.INTEGER.UNSIGNED,
         autoIncrement: true,
         primaryKey: true,
     },

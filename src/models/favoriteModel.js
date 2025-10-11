@@ -3,17 +3,17 @@ const { sequelize } = require('../config/database');
 
 const Favorite = sequelize.define('Favorite', {
     id: {
-        type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true,
+        type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true,
     },
-    id_user: {
-        type: DataTypes.INTEGER, allowNull: false,
+    user_id: {
+        type: DataTypes.INTEGER.UNSIGNED, allowNull: false,
         references: {
             model: 'user',
             key: 'id',
         }
     },
-    id_product: {
-        type: DataTypes.INTEGER, allowNull: false,
+    product_id: {
+        type: DataTypes.INTEGER.UNSIGNED, allowNull: false,
         references: {
             model: 'product',
             key: 'id',
@@ -26,7 +26,7 @@ const Favorite = sequelize.define('Favorite', {
     indexes: [
         {
             unique: true,
-            fields: ['id_user', 'id_product']
+            fields: ['user_id', 'product_id']
         }
     ],
 }

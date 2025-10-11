@@ -3,7 +3,7 @@ const { sequelize } = require('../config/database');
 
 const ProductVariants = sequelize.define('ProductVariants', {
     id: {
-        type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true,
+        type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true,
     },
     size: {
         type: DataTypes.STRING, allowNull: true,
@@ -24,7 +24,7 @@ const ProductVariants = sequelize.define('ProductVariants', {
         type: DataTypes.INTEGER, defaultValue: 0, allowNull: false,
     },
     product_id: {
-        type: DataTypes.INTEGER, allowNull: false,
+        type: DataTypes.INTEGER.UNSIGNED, allowNull: false,
         references: {
             model: 'product',
             key: 'id',

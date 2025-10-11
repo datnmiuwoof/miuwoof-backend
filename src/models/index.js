@@ -17,71 +17,74 @@ const payment = require('./paymentModel');
 const banner = require('./bannerModel');
 const brand = require('./brandModel');
 
-// USER
-user.hasMany(address, { foreignKey: 'id_user' });
-address.belongsTo(user, { foreignKey: 'id_user' });
+// ======================== USER ========================
+user.hasMany(address, { foreignKey: 'user_id' });
+address.belongsTo(user, { foreignKey: 'user_id' });
 
-user.hasMany(order, { foreignKey: 'id_user' });
-order.belongsTo(user, { foreignKey: 'id_user' });
+user.hasMany(order, { foreignKey: 'user_id' });
+order.belongsTo(user, { foreignKey: 'user_id' });
 
-user.hasMany(favorite, { foreignKey: 'id_user' });
-favorite.belongsTo(user, { foreignKey: 'id_user' });
+user.hasMany(favorite, { foreignKey: 'user_id' });
+favorite.belongsTo(user, { foreignKey: 'user_id' });
 
-user.hasMany(review, { foreignKey: 'id_user' });
-review.belongsTo(user, { foreignKey: 'id_user' });
+user.hasMany(review, { foreignKey: 'user_id' });
+review.belongsTo(user, { foreignKey: 'user_id' });
 
-user.hasMany(discount, { foreignKey: 'id_user' });
-discount.belongsTo(user, { foreignKey: 'id_user' });
+// Trong SQL của bạn, discount KHÔNG có user_id → bỏ quan hệ này
+// user.hasMany(discount, { foreignKey: 'user_id' });
+// discount.belongsTo(user, { foreignKey: 'user_id' });
 
-user.hasMany(post_model, { foreignKey: 'author_id' });
-post_model.belongsTo(user, { foreignKey: 'author_id' });
+user.hasMany(post_model, { foreignKey: 'user_id' });
+post_model.belongsTo(user, { foreignKey: 'user_id' });
 
-// PRODUCT
-product.belongsTo(category, { foreignKey: 'id_category' });
-category.hasMany(product, { foreignKey: 'id_category' });
+// ======================== PRODUCT ========================
+product.belongsTo(category, { foreignKey: 'category_id' });
+category.hasMany(product, { foreignKey: 'category_id' });
 
-product.belongsTo(brand, { foreignKey: 'id_brand' });
-brand.hasMany(product, { foreignKey: 'id_brand' });
+product.belongsTo(brand, { foreignKey: 'brand_id' });
+brand.hasMany(product, { foreignKey: 'brand_id' });
 
-product.hasMany(product_image, { foreignKey: 'id_product' });
-product_image.belongsTo(product, { foreignKey: 'id_product' });
+product.hasMany(product_image, { foreignKey: 'product_id' });
+product_image.belongsTo(product, { foreignKey: 'product_id' });
 
 product.hasMany(product_variants, { foreignKey: 'product_id' });
 product_variants.belongsTo(product, { foreignKey: 'product_id' });
 
-product.hasMany(favorite, { foreignKey: 'id_product' });
-favorite.belongsTo(product, { foreignKey: 'id_product' });
+product.hasMany(favorite, { foreignKey: 'product_id' });
+favorite.belongsTo(product, { foreignKey: 'product_id' });
 
-product.hasMany(review, { foreignKey: 'id_product' });
-review.belongsTo(product, { foreignKey: 'id_product' });
+product.hasMany(review, { foreignKey: 'product_id' });
+review.belongsTo(product, { foreignKey: 'product_id' });
 
-product.hasMany(order_detail, { foreignKey: 'id_product' });
-order_detail.belongsTo(product, { foreignKey: 'id_product' });
+// ======================== ORDER ========================
+order.belongsTo(payment, { foreignKey: 'payment_id' });
+payment.hasMany(order, { foreignKey: 'payment_id' });
 
-// ORDER
-order.belongsTo(payment, { foreignKey: 'id_payment' });
-payment.hasMany(order, { foreignKey: 'id_payment' });
+order.belongsTo(shipping_method, { foreignKey: 'shipping_method_id' });
+shipping_method.hasMany(order, { foreignKey: 'shipping_method_id' });
 
-order.belongsTo(shipping_method, { foreignKey: 'id_shipping_method' });
-shipping_method.hasMany(order, { foreignKey: 'id_shipping_method' });
+order.belongsTo(discount, { foreignKey: 'discount_id' });
+discount.hasMany(order, { foreignKey: 'discount_id' });
 
-order.belongsTo(discount, { foreignKey: 'id_discount' });
-discount.hasMany(order, { foreignKey: 'id_discount' });
+order.belongsTo(address, { foreignKey: 'address_id' });
+address.hasMany(order, { foreignKey: 'address_id' });
 
-order.belongsTo(address, { foreignKey: 'id_address' });
-address.hasMany(order, { foreignKey: 'id_address' });
+order.hasMany(order_detail, { foreignKey: 'order_id' });
+order_detail.belongsTo(order, { foreignKey: 'order_id' });
 
-order.hasMany(order_detail, { foreignKey: 'id_order' });
-order_detail.belongsTo(order, { foreignKey: 'id_order' });
+// ✅ Sửa: chỉ belongsTo thôi
+order_detail.belongsTo(product_variants, { foreignKey: 'product_variant_id' });
+product_variants.hasMany(order_detail, { foreignKey: 'product_variant_id' });
 
-// POST
+// ======================== POST ========================
 post_model.belongsTo(post_category, { foreignKey: 'post_category_id' });
 post_category.hasMany(post_model, { foreignKey: 'post_category_id' });
 
-// CATEGORY PARENT-CHILD
+// ======================== CATEGORY parent-child ========================
 category.hasMany(category, { as: 'children', foreignKey: 'parent_id' });
 category.belongsTo(category, { as: 'parent', foreignKey: 'parent_id' });
 
+// ======================== EXPORT ========================
 module.exports = {
     sequelize,
     user,

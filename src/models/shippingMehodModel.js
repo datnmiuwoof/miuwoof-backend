@@ -3,7 +3,7 @@ const { sequelize } = require('../config/database');
 
 const ShippingMethod = sequelize.define('ShippingMethod', {
     id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.INTEGER.UNSIGNED,
         autoIncrement: true,
         primaryKey: true,
     },

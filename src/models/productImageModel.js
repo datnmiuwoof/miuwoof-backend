@@ -3,7 +3,7 @@ const { sequelize } = require('../config/database');
 
 const ProductImage = sequelize.define('ProductImage', {
     id: {
-        type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true,
+        type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true,
     },
     image: {
         type: DataTypes.STRING, allowNull: false,
@@ -17,8 +17,8 @@ const ProductImage = sequelize.define('ProductImage', {
     sort_order: {
         type: DataTypes.INTEGER, defaultValue: 0,
     },
-    id_product: {
-        type: DataTypes.INTEGER, allowNull: false,
+    product_id: {
+        type: DataTypes.INTEGER.UNSIGNED, allowNull: false,
         references: {
             model: 'product',
             key: 'id'

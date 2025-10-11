@@ -3,7 +3,7 @@ const { sequelize } = require('../config/database');
 
 const Order = sequelize.define('Order', {
     id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.INTEGER.UNSIGNED,
         autoIncrement: true,
         primaryKey: true,
     },
@@ -27,40 +27,40 @@ const Order = sequelize.define('Order', {
         type: DataTypes.TEXT,
         allowNull: true,
     },
-    id_payment: {
-        type: DataTypes.INTEGER,
+    payment_id: {
+        type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
         references: {
             model: 'payment',
             key: 'id'
         }
     },
-    id_shipping_method: {
-        type: DataTypes.INTEGER,
+    shipping_method_id: {
+        type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
         references: {
             model: 'shipping_method',
             key: 'id'
         }
     },
-    id_user: {
-        type: DataTypes.INTEGER,
+    user_id: {
+        type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
         references: {
             model: 'user',
             key: 'id'
         }
     },
-    id_discount: {
-        type: DataTypes.INTEGER,
+    discount_id: {
+        type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
         references: {
             model: 'discount',
             key: 'id'
         }
     },
-    id_address: {
-        type: DataTypes.INTEGER,
+    address_id: {
+        type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
         references: {
             model: 'address',

@@ -3,7 +3,7 @@ const { sequelize } = require('../config/database');
 
 const Brand = sequelize.define('Brand', {
     id: {
-        type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true,
+        type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true,
     },
     description: {
         type: DataTypes.TEXT, allowNull: true,
@@ -18,7 +18,7 @@ const Brand = sequelize.define('Brand', {
         type: DataTypes.STRING, allowNull: true,
     },
     sort_order: {
-        type: DataTypes.STRING, defaultValue: 0,
+        type: DataTypes.INTEGER, defaultValue: 0,
     },
 }, {
     tableName: 'brand',

@@ -3,7 +3,7 @@ const { sequelize } = require('../config/database');
 
 const Post = sequelize.define('Post', {
     id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.INTEGER.UNSIGNED,
         autoIncrement: true,
         primaryKey: true,
     },
@@ -24,15 +24,15 @@ const Post = sequelize.define('Post', {
         allowNull: true,
     },
     post_category_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
         references: {
             model: 'post_category',
             key: 'id',
         }
     },
-    author_id: {
-        type: DataTypes.INTEGER,
+    user_id: {
+        type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
         references: {
             model: 'user',

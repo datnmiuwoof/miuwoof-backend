@@ -3,38 +3,36 @@ const { sequelize } = require('../config/database');
 
 const Review = sequelize.define('Review', {
     id: {
-        type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true,
+        type: DataTypes.INTEGER.UNSIGNED,
+        autoIncrement: true,
+        primaryKey: true,
     },
-    id_user: {
-        type: DataTypes.INTEGER, allowNull: false,
+    user_id: {
+        type: DataTypes.INTEGER.UNSIGNED,
+        allowNull: false,
         references: {
             model: 'user',
             key: 'id',
-        }
+        },
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
     },
-    id_product: {
-        type: DataTypes.INTEGER, allowNull: false,
+    product_id: {
+        type: DataTypes.INTEGER.UNSIGNED,
+        allowNull: false,
         references: {
             model: 'product',
             key: 'id',
         },
     },
-    text: {
-        type: DataTypes.TEXT, allowNull: false,
-    },
-    rating: {
-        type: DataTypes.INTEGER,
+    content: {
+        type: DataTypes.TEXT,
         allowNull: false,
-        validate: {
-            min: 1,
-            max: 5,
-        }
     },
 }, {
     tableName: 'review',
     timestamps: true,
     underscored: true,
-}
-);
+});
 
 module.exports = Review;

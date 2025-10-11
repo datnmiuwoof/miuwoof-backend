@@ -3,19 +3,65 @@ const { sequelize } = require('../config/database');
 
 const Product = sequelize.define('Product', {
     id: {
-        type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true,
+        type: DataTypes.INTEGER.UNSIGNED,
+        autoIncrement: true,
+        primaryKey: true,
     },
     name: {
-        type: DataTypes.STRING, allowNull: false,
+        type: DataTypes.STRING(255),
+        allowNull: false,
     },
-    email: {
-        type: DataTypes.STRING, unique: true, allowNull: false,
+    slug: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+    },
+    price: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+    },
+    import_price: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+    },
+    sku: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+    },
+    image: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+    },
+    views: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+    },
+    is_hot: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
+    is_active: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+    },
+    description: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
+    category_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+    brand_id: {
+        type: DataTypes.INTEGER.UNSIGNED,
+        references: {
+            model: 'brand',
+            key: 'id'
+        }
     },
 }, {
     tableName: 'product',
     timestamps: true,
     underscored: true,
-}
-);
+});
 
 module.exports = Product;

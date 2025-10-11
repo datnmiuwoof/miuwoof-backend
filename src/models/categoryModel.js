@@ -3,7 +3,7 @@ const { sequelize } = require('../config/database');
 
 const Category = sequelize.define('Category', {
     id: {
-        type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true,
+        type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true,
     },
     name: {
         type: DataTypes.STRING, allowNull: false,
@@ -21,7 +21,7 @@ const Category = sequelize.define('Category', {
         type: DataTypes.TEXT, allowNull: true,
     },
     parent_id: {
-        type: DataTypes.INTEGER, allowNull: true,
+        type: DataTypes.INTEGER.UNSIGNED, allowNull: true,
         references: {
             model: 'category',
             key: 'id'
