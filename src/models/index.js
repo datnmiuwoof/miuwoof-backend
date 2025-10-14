@@ -16,6 +16,7 @@ const shipping_method = require('./shippingMehodModel');
 const payment = require('./paymentModel');
 const banner = require('./bannerModel');
 const brand = require('./brandModel');
+const productDiscount = require('./productDiscountModel');
 
 // ======================== USER ========================
 user.hasMany(address, { foreignKey: 'user_id' });
@@ -84,6 +85,21 @@ post_category.hasMany(post_model, { foreignKey: 'post_category_id' });
 category.hasMany(category, { as: 'children', foreignKey: 'parent_id' });
 category.belongsTo(category, { as: 'parent', foreignKey: 'parent_id' });
 
+// ======================== trung gian discount vs product ========================
+discount.belongsToMany(product, {
+    through: productDiscount,
+    foreignKey: 'discount_id',
+    otherKey: 'product_id',
+});
+
+product.belongsToMany(discount, {
+    through: productDiscount,
+    foreignKey: 'product_id',
+    otherKey: 'discount_id',
+});
+
+
+
 // ======================== EXPORT ========================
 module.exports = {
     sequelize,
@@ -104,4 +120,5 @@ module.exports = {
     payment,
     banner,
     brand,
+    productDiscount
 };

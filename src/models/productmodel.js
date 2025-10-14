@@ -43,13 +43,20 @@ const Product = sequelize.define('Product', {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
     },
+    sold_out: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
     description: {
         type: DataTypes.TEXT,
         allowNull: true,
     },
     category_id: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        references: {
+            model: 'category',
+            key: 'id'
+        }
     },
     brand_id: {
         type: DataTypes.INTEGER.UNSIGNED,
