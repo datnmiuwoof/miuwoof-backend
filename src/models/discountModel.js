@@ -12,9 +12,14 @@ const Discount = sequelize.define('Discount', {
         allowNull: false,
     },
     discount_value: {
-        type: DataTypes.DECIMAL(10, 2),
+        type: DataTypes.INTEGER,
         allowNull: false,
+        validate: {
+            min: 0,
+            max: 100,
+        },
     },
+
     discount_type: {
         type: DataTypes.TINYINT,
         allowNull: false,   // 0 = fixed, 1 = percentage

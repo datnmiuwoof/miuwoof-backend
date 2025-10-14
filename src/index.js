@@ -26,7 +26,7 @@ app.use('/user', userRouter);
 
 (async () => {
     await connectDB();
-    await sequelize.sync({ alter: true }); // tự động tạo bảng nếu chưa có
+    await sequelize.sync({ alter: false }); // tự động tạo bảng nếu chưa có
     app.listen(port, () => {
         console.log(`✅ Server chạy tại http://localhost:${port}`);
     });
