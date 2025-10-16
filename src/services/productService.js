@@ -9,7 +9,7 @@ const {
 } = require("../models");
 
 class ProductService {
-  async getAllProducts() {}
+  async getAllProducts() { }
 
   // tạo sản phẩm
   async createProduct(productData) {
