@@ -4,6 +4,7 @@ const cors = require('cors');
 const { connectDB, sequelize } = require('./config/database');
 const siteRouter = require('./router/siterouter');
 const userRouter = require('./router/siterouter');
+const categoryRouter = require('./router/categoryrouter');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -21,7 +22,7 @@ app.use(cors());
 // Route cơ bản
 app.use('/', siteRouter);
 app.use('/user', userRouter);
-
+app.use('/category', categoryRouter);
 
 
 (async () => {

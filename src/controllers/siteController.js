@@ -1,5 +1,4 @@
 const { banner, product, category, post_model, discount } = require('../models');
-const { Op, where } = require('sequelize');
 
 
 class siteController {
