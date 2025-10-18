@@ -21,6 +21,7 @@ app.use(cors());
 app.use("/", siteRouter);
 app.use("/user", userRouter);
 app.use("/api/products", require("./router/productsrouter"));
+app.use("/api/categories", require("./router/categoryrouter"));
 (async () => {
   await connectDB();
   await sequelize.sync({ alter: false }); // tự động tạo bảng nếu chưa có

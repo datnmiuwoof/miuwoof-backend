@@ -9,7 +9,11 @@ const {
 } = require("../models");
 
 class ProductService {
-  async getAllProducts() {}
+  async getAllProducts(){
+    return await product.findAll({
+      include: [category],
+    });
+};
 
   // tạo sản phẩm
   async createProduct(productData) {

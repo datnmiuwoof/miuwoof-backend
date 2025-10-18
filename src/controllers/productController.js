@@ -4,10 +4,21 @@ const productService = require("../services/productService");
 class ProductController {
   // Lấy tất cả sản phẩm
   async getAllProducts(req, res) {
-    // ... (Logic đã làm ở các bước trước)
-    res
-      .status(200)
-      .json({ message: "API lấy danh sách sản phẩm sẽ được xây dựng" });
+        try {
+    const products = await productService.getAllProducts();
+
+    res.status(200).json({
+      success: true,
+      message: 'Lấy danh sách sản phẩm thành công!',
+      data: products,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Đã xảy ra lỗi phía server.',
+      error: error.message,
+    });
+  }
   }
 
   // ✅ Tạo sản phẩm mới
