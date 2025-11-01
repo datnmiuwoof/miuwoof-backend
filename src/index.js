@@ -6,7 +6,7 @@ const siteRouter = require("./router/siterouter");
 const userRouter = require("./router/siterouter");
 const app = express();
 const port = process.env.PORT || 3000;
-
+const nodemailer = require("nodemailer");
 // Middleware để parse JSON
 app.use(express.json());
 

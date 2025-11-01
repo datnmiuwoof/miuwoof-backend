@@ -1,0 +1,92 @@
+// src/services/emailService.js
+const nodemailer = require("nodemailer");
+
+class EmailService {
+  constructor() {
+    // 1. Tạo transporter
+    // Transporter là đối tượng chịu trách nhiệm gửi mail
+    this.transporter = nodemailer.createTransport({
+      host: process.env.MAIL_HOST,
+      port: process.env.MAIL_PORT,
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS,
+      },
+    });
+  }
+
+  /**
+   * Hàm gửi mail chung
+   * @param {object} options - Tùy chọn gửi mail
+   * @param {string} options.to - Email người nhận
+   * @param {string} options.subject - Chủ đề email
+   * @param {string} options.html - Nội dung HTML của email
+   * @param {string} [options.text] - (Tùy chọn) Nội dung text (nếu client không hỗ trợ HTML)
+   */
+  async sendMail({ to, subject, html, text }) {
+    try {
+      const mailOptions = {
+        from: process.env.MAIL_FROM, // Email người gửi (đã cấu hình ở .env)
+        to: to,
+        subject: subject,
+        html: html,
+        text: text, // (Tùy chọn)
+      };
+
+      // 3. Gửi mail
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log("Email đã gửi thành công:", info.messageId);
+      return info;
+    } catch (error) {
+      console.error("Lỗi khi gửi email:", error);
+      throw new Error("Gửi email thất bại.");
+    }
+  }
+
+  /**
+   * Gửi email xác nhận liên hệ (ví dụ đầu tiên)
+   */
+  async sendContactReply(userEmail, userName) {
+    const subject = "Cảm ơn bạn đã liên hệ với MiuWoof Shop!";
+    const html = `
+            <h1>Chào ${userName},</h1>
+            <p>Chúng tôi đã nhận được thông tin liên hệ của bạn.</p>
+            <p>Cảm ơn bạn đã quan tâm đến MiuWoof Shop. Chúng tôi sẽ phản hồi lại bạn trong thời gian sớm nhất.</p>
+            <br>
+            <p>Trân trọng,</p>
+            <p>Đội ngũ MiuWoof.</p>
+        `;
+
+    await this.sendMail({
+      to: userEmail,
+      subject: subject,
+      html: html,
+    });
+  }
+
+  /**
+   * Gửi thông báo có liên hệ mới cho Admin (ví dụ)
+   */
+  async sendContactNotificationToAdmin(contactData) {
+    const subject = `[MiuWoof] Bạn có liên hệ mới từ ${contactData.name}`;
+    const html = `
+            <h1>Thông báo liên hệ mới</h1>
+            <p><strong>Tên:</strong> ${contactData.name}</p>
+            <p><strong>Email:</strong> ${contactData.email}</p>
+            <p><strong>Nội dung:</strong></p>
+            <p>${contactData.message}</p>
+        `;
+
+    await this.sendMail({
+      to: "nguyenthegiaan39@gmail.com", // Email của admin
+      subject: subject,
+      html: html,
+    });
+  }
+
+  // Sau này, bạn chỉ cần thêm các hàm mới vào đây
+  // async sendPasswordReset(userEmail, resetLink) { ... }
+  // async sendOrderConfirmation(userEmail, orderDetails) { ... }
+}
+
+module.exports = new EmailService();
