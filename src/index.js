@@ -2,9 +2,12 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { connectDB, sequelize } = require('./config/database');
-const siteRouter = require('./router/siterouter');
-const userRouter = require('./router/siterouter');
-const productRouter = require("./router/productsrouter");
+const siteRouter = require('./router/client/siterouter');
+const productRouter = require('./router/client/productsrouter');
+const productAdminRouter = require("./router/admin/productAdminrouter");
+const categoryAdminRouter = require("./router/admin/categoryAdminrouter");
+const userAdminRouter = require("./router/admin/userAdminrouter")
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -21,8 +24,11 @@ app.use(cors());
 
 
 app.use("/", siteRouter);
-app.use("/user", userRouter);
-app.use("/api/products", productRouter);
+app.use("/product", productRouter);
+app.use("/api/products", productAdminRouter);
+app.use("/api/categorys", categoryAdminRouter);
+app.use("/api/users", userAdminRouter);
+
 
 (async () => {
     await connectDB();

@@ -17,17 +17,22 @@ const ProductImage = sequelize.define('ProductImage', {
     sort_order: {
         type: DataTypes.INTEGER, defaultValue: 0,
     },
-    product_id: {
+    product_variants_id: {
         type: DataTypes.INTEGER.UNSIGNED, allowNull: false,
         references: {
-            model: 'product',
+            model: 'product_variants',
             key: 'id'
         }
+    },
+    is_deleted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
     },
 }, {
     tableName: 'product_image',
     timestamps: true,
     underscored: true,
+
 }
 );
 

@@ -15,21 +15,9 @@ const Product = sequelize.define('Product', {
         type: DataTypes.STRING(255),
         allowNull: true,
     },
-    price: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-    },
-    import_price: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-    },
     sku: {
         type: DataTypes.STRING(100),
         allowNull: true,
-    },
-    image: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
     },
     views: {
         type: DataTypes.INTEGER,
@@ -65,10 +53,15 @@ const Product = sequelize.define('Product', {
             key: 'id'
         }
     },
+    is_deleted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
 }, {
     tableName: 'product',
     timestamps: true,
     underscored: true,
+
 });
 
 module.exports = Product;

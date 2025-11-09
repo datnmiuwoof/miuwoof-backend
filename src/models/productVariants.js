@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
+const { allow } = require('joi');
 
 const ProductVariants = sequelize.define('ProductVariants', {
     id: {
@@ -18,7 +19,16 @@ const ProductVariants = sequelize.define('ProductVariants', {
         type: DataTypes.STRING, allowNull: true,
     },
     price: {
-        type: DataTypes.DECIMAL(10, 2), allowNull: false,
+        type: DataTypes.FLOAT,
+        allowNull: false,
+    },
+    image: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+    },
+    import_price: {
+        type: DataTypes.FLOAT,
+        allowNull: true,
     },
     available_quantity: {
         type: DataTypes.INTEGER, defaultValue: 0, allowNull: false,
@@ -29,6 +39,10 @@ const ProductVariants = sequelize.define('ProductVariants', {
             model: 'product',
             key: 'id',
         }
+    },
+    is_deleted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
     },
 }, {
     tableName: 'product_variants',

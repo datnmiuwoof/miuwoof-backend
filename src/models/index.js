@@ -45,8 +45,6 @@ category.hasMany(product, { foreignKey: "category_id" });
 product.belongsTo(brand, { foreignKey: "brand_id" });
 brand.hasMany(product, { foreignKey: "brand_id" });
 
-product.hasMany(product_image, { foreignKey: "product_id" });
-product_image.belongsTo(product, { foreignKey: "product_id" });
 
 product.hasMany(product_variants, { foreignKey: "product_id" });
 product_variants.belongsTo(product, { foreignKey: "product_id" });
@@ -56,6 +54,24 @@ favorite.belongsTo(product, { foreignKey: "product_id" });
 
 product.hasMany(review, { foreignKey: "product_id" });
 review.belongsTo(product, { foreignKey: "product_id" });
+
+product_variants.hasMany(product_image, { foreignKey: "product_variants_id" });
+product_image.belongsTo(product_variants, { foreignKey: "product_variants_id" });
+
+
+// =============category=================
+
+// Category Model
+category.belongsTo(category, {
+  as: "ParentCategory",
+  foreignKey: "parent_id",
+});
+
+category.hasMany(category, {
+  as: "SubCategories",
+  foreignKey: "parent_id",
+});
+
 
 // ======================== ORDER ========================
 order.belongsTo(payment, { foreignKey: "payment_id" });
