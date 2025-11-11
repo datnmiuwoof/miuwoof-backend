@@ -161,6 +161,7 @@ class ProductService {
     return productsDiscount;
   }
 
+
   // tạo sản phẩm
   async createProduct(productData, files) {
     const t = await sequelize.transaction();

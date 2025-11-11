@@ -14,6 +14,18 @@ class CategoryService {
         return getAllcategory;
     }
 
+    async getAllCategories() {
+        // Lấy tất cả danh mục cha (không có parent_id)
+        // và include (lồng) các danh mục con của chúng vào
+        return await category.findAll({
+            where: { parent_id: null },
+            include: [{
+                model: category,
+                as: 'children', // Alias này phải khớp với models/index.js
+            }]
+        });
+    }
+
     // tạo sản phẩm
     async createCategory(categoryData) {
         const t = await sequelize.transaction();
@@ -122,3 +134,5 @@ class CategoryService {
 }
 
 module.exports = new CategoryService();
+
+

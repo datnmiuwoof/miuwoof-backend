@@ -144,6 +144,78 @@ class siteController {
             res.status(500).json({ message: error.message })
         }
     }
+
+    // Ví dụ: Trong file emailController.js (hoặc siteController.js)
+
+    async handleContactForm(req, res) {
+        try {
+            const { name, email, message } = req.body;
+
+            // BẮT ĐẦU logic xử lý Form Liên Hệ
+
+            // 1. Kiểm tra dữ liệu đầu vào
+            if (!name || !email || !message) {
+                return res
+                    .status(400)
+                    .json({ message: "Vui lòng điền đầy đủ thông tin." });
+            }
+
+            // 2. Gửi email thông báo cho Admin
+            await emailService.sendContactNotificationToAdmin({
+                name,
+                email,
+                message,
+            });
+
+            // 3. Gửi email phản hồi tự động cho người dùng
+            await emailService.sendContactReply(email, name);
+
+            // 4. Trả lời thành công
+            res.status(200).json({ message: "Gửi liên hệ thành công! Cảm ơn bạn." });
+
+        } catch (error) {
+            console.error("Lỗi khi xử lý form liên hệ:", error);
+            res.status(500).json({ message: "Có lỗi xảy ra, vui lòng thử lại." });
+        }
+    }
+
+    async handleContactForm(req, res) {
+        try {
+            const { name, email, message } = req.body;
+
+            res.status(200).json({
+                message: "dữ liệu trang chủ",
+                banners,
+                categories,
+                products_dog,
+                products_cat,
+                products_discount,
+                products_new,
+                posts,
+            })
+        } catch (error) {
+            res.status(500).json({ message: error.message })
+        }
+        // Kiểm tra dữ liệu đầu vào
+        if (!name || !email || !message) {
+            return res
+                .status(400)
+                .json({ message: "Vui lòng điền đầy đủ thông tin." });
+        }
+        console.log("--- Bắt đầu xử lý Form Liên Hệ ---");
+        // 1. Gửi email thông báo cho Admin
+        await emailService.sendContactNotificationToAdmin({
+            name,
+            email,
+            message,
+        });
+        // 2. Gửi email phản hồi tự động cho người dùng
+        await emailService.sendContactReply(email, name);
+        res.status(200).json({ message: "Gửi liên hệ thành công! Cảm ơn bạn." });
+    } catch(error) {
+        console.error("Lỗi khi xử lý form liên hệ:", error);
+        res.status(500).json({ message: "Có lỗi xảy ra, vui lòng thử lại." });
+    }
 }
 
 module.exports = new siteController;

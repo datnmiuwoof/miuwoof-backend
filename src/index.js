@@ -12,7 +12,7 @@ const userRouter = require("./router/client/userrouter");
 
 const app = express();
 const port = process.env.PORT || 3000;
-
+const nodemailer = require("nodemailer");
 // Middleware để parse JSON
 app.use(express.json());
 
