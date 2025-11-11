@@ -4,6 +4,7 @@ const upload = require("../../middlewares/upload");
 const productController = require("../../controllers/admin/productController");
 
 // ✅ Đặt các route cụ thể lên trước
+router.get("/deleted", productController.getSoftDelete)
 router.get("/:id", productController.getProductById);
 router.put("/:id", upload.any(), productController.updateProduct);
 router.put("/:id/soft-delete", productController.SoftDelete);

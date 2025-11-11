@@ -17,6 +17,7 @@ const payment = require("./paymentModel");
 const banner = require("./bannerModel");
 const brand = require("./brandModel");
 const productDiscount = require("./productDiscountModel");
+const product_category = require("./productCategoryModel")
 
 // ======================== USER ========================
 user.hasMany(address, { foreignKey: "user_id" });
@@ -39,8 +40,8 @@ user.hasMany(post_model, { foreignKey: "user_id" });
 post_model.belongsTo(user, { foreignKey: "user_id" });
 
 // ======================== PRODUCT ========================
-product.belongsTo(category, { foreignKey: "category_id" });
-category.hasMany(product, { foreignKey: "category_id" });
+// product.belongsTo(category, { foreignKey: "category_id" });
+// category.hasMany(product, { foreignKey: "category_id" });
 
 product.belongsTo(brand, { foreignKey: "brand_id" });
 brand.hasMany(product, { foreignKey: "brand_id" });
@@ -114,6 +115,21 @@ product.belongsToMany(discount, {
   otherKey: "discount_id",
 });
 
+// ======================== trung gian category vs product ========================
+// N product - N category
+product.belongsToMany(category, {
+  through: product_category,
+  foreignKey: 'product_id',
+  otherKey: 'category_id',
+});
+
+category.belongsToMany(product, {
+  through: product_category,
+  foreignKey: 'category_id',
+  otherKey: 'product_id',
+});
+
+
 // ======================== EXPORT ========================
 module.exports = {
   sequelize,
@@ -135,4 +151,5 @@ module.exports = {
   banner,
   brand,
   productDiscount,
+  product_category,
 };

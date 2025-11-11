@@ -7,6 +7,7 @@ const {
   category,
   brand,
   discount,
+  product_category,
 } = require("../models");
 const Category = require("../models/categoryModel");
 // const { create } = require("../controllers/admin/categoryController");
@@ -17,6 +18,7 @@ const fs = require("fs");
 
 class ProductService {
 
+  //lấy all sản phẩm ở admin
   async getAllProducts(page = 1, limit = 10) {
 
     if (page < 1) page = 1;
@@ -28,8 +30,10 @@ class ProductService {
       where: { is_deleted: false },
       include: [
         {
-          model: category,
-          attributes: ['id', 'name'],
+          model: Category,
+          through: { attributes: [] },
+          attributes: ['id', 'name', 'slug'],
+          required: false,
         },
         {
           model: product_variants,
@@ -61,33 +65,59 @@ class ProductService {
     };
   }
 
+  //lấy sản phẩm theo loại
   async getCollections(slug) {
-    //Tìm category theo slug
+
     const cate = await category.findOne({ where: { slug } });
 
-    if (!cate) return []; // nếu không tồn tại thì trả rỗng
+    if (!cate) return [];
 
-    // Nếu là category cha → tìm các cate con
     let categoryIds = [cate.id];
+
+    // if (cate.parent_id === null) {
+    //   const children = await category.findAll({
+    //     where: { parent_id: cate.id },
+    //     attributes: ['id'],
+    //   });
+
+    //   if (children.length) {
+    //     categoryIds = children.map((c) => c.id);
+    //   }
+    // }
 
     if (cate.parent_id === null) {
       const children = await category.findAll({
         where: { parent_id: cate.id },
         attributes: ['id'],
       });
-
       if (children.length) {
-        categoryIds = children.map((c) => c.id);
+        categoryIds = [cate.id, ...children.map((c) => c.id)];
       }
     }
 
-    // Lấy product thuộc các category vừa tìm được
+
     const getCollections = await product.findAll({
+      where: { is_deleted: false },
       include: [
         {
-          model: category,
-          attributes: ['id', 'slug', 'name'],
+          model: Category,
+          through: { attributes: [] },
+          attributes: ['id', 'name', 'slug'],
           where: { id: categoryIds },
+          required: true,
+        },
+        {
+          model: product_variants,
+          attributes: ["price"],
+          separate: true,
+          limit: 1,
+          order: [['price', 'ASC']],
+          include: [
+            {
+              model: product_image,
+              attributes: ['image']
+            }
+          ]
         },
         {
           model: discount,
@@ -99,9 +129,24 @@ class ProductService {
     return getCollections;
   }
 
+  // lấy sản phẩm giảm giá
   async getAllDiscount() {
     const productsDiscount = await product.findAll({
+      where: { is_deleted: false },
       include: [
+        {
+          model: product_variants,
+          attributes: ["price"],
+          separate: true,
+          limit: 1,
+          order: [['price', 'ASC']],
+          include: [
+            {
+              model: product_image,
+              attributes: ['image']
+            }
+          ]
+        },
         {
           model: discount,
           as: 'Discounts',
@@ -120,16 +165,24 @@ class ProductService {
   async createProduct(productData, files) {
     const t = await sequelize.transaction();
     try {
+      const categories = JSON.parse(productData.category_ids);
       const newproduct = await product.create(
         {
           name: productData.name,
           slug: slug(productData.name, { lower: true }),
           description: productData.description,
-          category_id: productData.category_id,
         },
         {
           transaction: t,
         });
+
+      for (let category of categories) {
+        const productCategory = await product_category.create({
+          product_id: newproduct.id,
+          category_id: category,
+        }, { transaction: t })
+      }
+
 
       let variants = productData.variants
       if (typeof variants === "string") {
@@ -159,7 +212,10 @@ class ProductService {
               image: url,
             });
 
-            fs.existsSync(file.path) && fs.unlinkSync(file.path);
+            const absolutePath = path.resolve(file.path);
+            if (fs.existsSync(absolutePath)) {
+              fs.unlinkSync(absolutePath);
+            }
           }
 
           const imageUpload = await Promise.all(image)
@@ -213,7 +269,7 @@ class ProductService {
       include: [
         {
           model: category,
-          as: "Category",
+          through: { attributes: [] },
           include: [
             {
               model: category,
@@ -241,6 +297,7 @@ class ProductService {
     return result;
   }
 
+  //cập nhật sản phẩm
   async updateProduct(productId, productData, files) {
 
     const t = await sequelize.transaction();
@@ -261,8 +318,8 @@ class ProductService {
       if (productData.description && productData.description.trim() !== "")
         productUpdate.description = productData.description;
 
-      if (productData.category_id && String(productData.category_id).trim() !== "")
-        productUpdate.category_id = productData.category_id;
+      if (productData.category_ids && String(productData.category_ids).trim() !== "")
+        productUpdate.category_ids = productData.category_ids;
 
 
       const slugValue = productUpdate.name
@@ -274,10 +331,40 @@ class ProductService {
           name: productUpdate.name ?? productToUpdate.name,
           slug: slugValue,
           description: productUpdate.description ?? productToUpdate.description,
-          category_id: productUpdate.category_id ?? productToUpdate.category_id,
         },
         { transaction: t }
       );
+
+      // Nếu category_ids là string JSON thì parse
+      let categoryIds = productData.category_ids;
+      if (typeof categoryIds === 'string') {
+        try {
+          categoryIds = JSON.parse(categoryIds);
+        } catch (err) {
+          categoryIds = [];
+        }
+      }
+
+      // Xóa hết category cũ
+      await product_category.destroy({
+        where: { product_id: productId },
+        transaction: t
+      });
+
+      // Thêm category mới
+      for (let catId of categoryIds) {
+        const id = Number(catId);
+        if (!isNaN(id)) {
+          await product_category.create(
+            {
+              product_id: productId,
+              category_id: id
+            },
+            { transaction: t }
+          );
+        }
+      }
+
 
       //chuyển đổi thành sting nếu k đúng kiểu
       if (typeof productData.variants === "string") {
@@ -289,7 +376,7 @@ class ProductService {
         }
       }
 
-      const { Op, } = require("sequelize");
+      const { Op, where, } = require("sequelize");
       const variantIdsToKeep = JSON.parse(productData.tokeepvariants || "[]");
 
       const variantsToDelete = await product_variants.findAll({
@@ -417,25 +504,64 @@ class ProductService {
     }
   }
 
+  //xóa mềm sản phẩm
   async softDelete(id) {
+    const t = await sequelize.transaction();
     try {
-      const t = await sequelize.transaction();
+      await product.update({ is_deleted: true }, { where: { id }, transaction: t });
 
-      const is_deleted = await product.update({ is_deleted: true }, { where: { id } });
+      const variants = await product_variants.findAll({ where: { product_id: id }, transaction: t });
 
-      const is_variants = await product_variants.findAll({ where: { product_id: id } });
+      for (const variant of variants) {
+        await product_variants.update(
+          { is_deleted: true },
+          { where: { id: variant.id }, transaction: t }
+        );
 
-      for (let variant of is_variants) {
-        const variants = await product_variants.update({ is_deleted: true }, { where: { id: variant.id } });
-
-        const variant_images = await product_image.update({ is_deleted: true }, { where: { product_variants_id: variant.id } })
+        await product_image.update(
+          { is_deleted: true },
+          { where: { product_variants_id: variant.id }, transaction: t }
+        );
       }
-      res.json({ message: "xoa san pham thanh cong" })
+
+      await t.commit();
+      return true; // ✅ chỉ trả về kết quả
     } catch (error) {
-      return false;
+      await t.rollback();
+      console.error(error);
+      return false; // hoặc throw error để controller xử lý
     }
   }
 
+  //lấy sản phẩm xóa mềm
+  async getSoftDeleted() {
+    try {
+      const getdeleted = await product.findAll({
+        where: { is_deleted: true },
+        include: [
+          {
+            model: product_variants,
+            limit: 1,
+            include: [
+              {
+                model: product_image,
+                attributes: ['id', 'image'],
+                limit: 1
+              }
+            ]
+          },
+        ]
+      })
+
+      if (!getdeleted) {
+        return null;
+      }
+
+      return getdeleted;
+    } catch (error) {
+      return error;
+    }
+  }
 
   // xóa sản phẩm
   async deleteProduct(productId) {

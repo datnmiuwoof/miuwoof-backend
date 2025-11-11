@@ -4,11 +4,14 @@ const bcrypt = require("bcrypt");
 
 
 class userService {
+
+    //lấy danh sách user
     async getAlluser() {
         const getalluser = await user.findAll();
         return getalluser;
     }
 
+    //đăng ký user
     async addUser(adduser) {
         const t = await sequelize.transaction();
 
@@ -39,6 +42,7 @@ class userService {
 
     }
 
+    //đăng nhập user
     async loginUser(loginUser) {
         try {
             const checkUser = await user.findOne({ where: { email: loginUser.email } });

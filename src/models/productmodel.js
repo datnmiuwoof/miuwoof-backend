@@ -39,13 +39,6 @@ const Product = sequelize.define('Product', {
         type: DataTypes.TEXT,
         allowNull: true,
     },
-    category_id: {
-        type: DataTypes.INTEGER,
-        references: {
-            model: 'category',
-            key: 'id'
-        }
-    },
     brand_id: {
         type: DataTypes.INTEGER.UNSIGNED,
         references: {

@@ -58,7 +58,6 @@ class ProductController {
     }
   }
 
-
   // ✅ Cập nhật sản phẩm
   async updateProduct(req, res) {
     try {
@@ -72,8 +71,6 @@ class ProductController {
         req.body,
         req.files
       );
-
-      console.log("📦 FILES:", req.files);
 
       res.status(200).json({
         message: "Cập nhật sản phẩm thành công!",
@@ -102,7 +99,7 @@ class ProductController {
         return res.status(400).json({ message: "khong the xoa loi logic" })
       }
 
-      res.status(201).json({
+      res.status(200).json({
         message: "xoa thanh cong",
         data: is_deleted,
       })
@@ -112,6 +109,20 @@ class ProductController {
         status: "error",
         message: "Lỗi hệ thống.",
       });
+    }
+  }
+
+  //lấy sản phẩm xóa mềm
+
+  async getSoftDelete(req, res) {
+    try {
+      const getdeleted = await productService.getSoftDeleted();
+
+      if (getdeleted) {
+        return res.status(200).json({ message: "lấy sản phẩm xóa mềm thành côngg", data: getdeleted });
+      }
+    } catch (error) {
+      return res.status(500).json({ message: error })
     }
   }
 

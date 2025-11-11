@@ -6,7 +6,8 @@ const siteRouter = require('./router/client/siterouter');
 const productRouter = require('./router/client/productsrouter');
 const productAdminRouter = require("./router/admin/productAdminrouter");
 const categoryAdminRouter = require("./router/admin/categoryAdminrouter");
-const userAdminRouter = require("./router/admin/userAdminrouter")
+const userAdminRouter = require("./router/admin/userAdminrouter");
+const userRouter = require("./router/client/userrouter");
 
 
 const app = express();
@@ -25,6 +26,7 @@ app.use(cors());
 
 app.use("/", siteRouter);
 app.use("/product", productRouter);
+app.use("/user", userRouter);
 app.use("/api/products", productAdminRouter);
 app.use("/api/categorys", categoryAdminRouter);
 app.use("/api/users", userAdminRouter);
