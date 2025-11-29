@@ -15,9 +15,13 @@ const OrderDetail = sequelize.define('OrderDetail', {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
+    name: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+    },
     sku: {
         type: DataTypes.STRING(100),
-        allowNull: false,
+        allowNull: true,
     },
     product_variant_id: {
         type: DataTypes.INTEGER.UNSIGNED,

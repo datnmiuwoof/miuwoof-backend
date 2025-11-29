@@ -26,14 +26,14 @@ class EmailService {
   async sendMail({ to, subject, html, text }) {
     try {
       const mailOptions = {
-        from: process.env.MAIL_FROM, // Email người gửi (đã cấu hình ở .env)
+        from: process.env.MAIL_FROM,
         to: to,
         subject: subject,
         html: html,
-        text: text, // (Tùy chọn)
+        text: text,
       };
 
-      // 3. Gửi mail
+
       const info = await this.transporter.sendMail(mailOptions);
       console.log("Email đã gửi thành công:", info.messageId);
       return info;
@@ -43,9 +43,26 @@ class EmailService {
     }
   }
 
-  /**
-   * Gửi email xác nhận liên hệ (ví dụ đầu tiên)
-   */
+  async sendRegisterOtp(userEmail, otp) {
+    const subject = "Mã xác minh đăng ký tài khoản MiuWoof";
+    const html = `
+     <h2>Mã xác minh của bạn là</h2>
+     <p>Mã OTP để xác minh đăng ký tài khoản là:</p>
+     <h1 style="font-size: 28px; letter-spacing: 4px;">${otp}</h1>
+     <p>Mã có hiệu lực trong 5 phút.</p>
+        <br>
+        <p>Trân trọng,<br>MiuWoof Team</p>
+     `;
+
+    await this.sendMail({
+      to: userEmail,
+      subject: subject,
+      html: html,
+    })
+  }
+
+  // Gửi email xác nhận liên hệ (ví dụ đầu tiên)
+
   async sendContactReply(userEmail, userName) {
     const subject = "Cảm ơn bạn đã liên hệ với MiuWoof Shop!";
     const html = `
@@ -64,9 +81,9 @@ class EmailService {
     });
   }
 
-  /**
-   * Gửi thông báo có liên hệ mới cho Admin (ví dụ)
-   */
+
+  // Gửi thông báo có liên hệ mới cho Admin (ví dụ)
+
   async sendContactNotificationToAdmin(contactData) {
     const subject = `[MiuWoof] Bạn có liên hệ mới từ ${contactData.name}`;
     const html = `
@@ -78,7 +95,7 @@ class EmailService {
         `;
 
     await this.sendMail({
-      to: "nguyenthegiaan39@gmail.com", // Email của admin
+      to: "nguyenthegiaan39@gmail.com",
       subject: subject,
       html: html,
     });

@@ -17,7 +17,9 @@ const payment = require("./paymentModel");
 const banner = require("./bannerModel");
 const brand = require("./brandModel");
 const productDiscount = require("./productDiscountModel");
-const product_category = require("./productCategoryModel")
+const product_category = require("./productCategoryModel");
+const cart = require("./cartModel");
+const cart_item = require("./cartItemModel");
 
 // ======================== USER ========================
 user.hasMany(address, { foreignKey: "user_id" });
@@ -31,6 +33,9 @@ favorite.belongsTo(user, { foreignKey: "user_id" });
 
 user.hasMany(review, { foreignKey: "user_id" });
 review.belongsTo(user, { foreignKey: "user_id" });
+
+user.hasOne(cart, { foreignKey: "user_id" });
+cart.belongsTo(user, { foreignKey: "user_id" });
 
 // Trong SQL của bạn, discount KHÔNG có user_id → bỏ quan hệ này
 // user.hasMany(discount, { foreignKey: 'user_id' });
@@ -75,8 +80,8 @@ category.hasMany(category, {
 
 
 // ======================== ORDER ========================
-order.belongsTo(payment, { foreignKey: "payment_id" });
-payment.hasMany(order, { foreignKey: "payment_id" });
+payment.belongsTo(order, { foreignKey: "order_id" });
+order.hasMany(payment, { foreignKey: "order_id" });
 
 order.belongsTo(shipping_method, { foreignKey: "shipping_method_id" });
 shipping_method.hasMany(order, { foreignKey: "shipping_method_id" });
@@ -97,6 +102,27 @@ product_variants.hasMany(order_detail, { foreignKey: "product_variant_id" });
 // ======================== POST ========================
 post_model.belongsTo(post_category, { foreignKey: "post_category_id" });
 post_category.hasMany(post_model, { foreignKey: "post_category_id" });
+
+
+// ======================== CART ========================
+
+cart.hasMany(cart_item, {
+  as: 'items',
+  foreignKey: "cart_id",
+  sourceKey: "id"
+});
+
+cart_item.belongsTo(cart, {
+  foreignKey: "cart_id",
+  targetKey: "id"
+});
+
+// N:1 CartItem → ProductVariant
+cart_item.belongsTo(product_variants, { foreignKey: "product_variants_id", as: 'product_variant' });
+product_variants.hasMany(cart_item, { foreignKey: "product_variants_id" });
+
+
+
 
 // ======================== CATEGORY parent-child ========================
 category.hasMany(category, { as: "children", foreignKey: "parent_id" });
@@ -152,4 +178,6 @@ module.exports = {
   brand,
   productDiscount,
   product_category,
+  cart,
+  cart_item,
 };

@@ -8,36 +8,29 @@ const Order = sequelize.define('Order', {
         primaryKey: true,
     },
     order_status: {
-        type: DataTypes.TINYINT,
+        type: DataTypes.ENUM('pending', 'confirmed', 'shipped', 'completed', 'canceled'),
         allowNull: false,
+        defaultValue: 'pending'
     },
     order_date: {
         type: DataTypes.DATE,
         allowNull: false,
     },
     total_amount: {
-        type: DataTypes.FLOAT,
+        type: DataTypes.DECIMAL,
         allowNull: false,
     },
     payment_status: {
-        type: DataTypes.TINYINT,
-        allowNull: false,
+        type: DataTypes.ENUM('pending', 'paid', 'failed', 'canceled'),
+        defaultValue: 'pending',
     },
     order_note: {
         type: DataTypes.TEXT,
         allowNull: true,
     },
-    payment_id: {
-        type: DataTypes.INTEGER.UNSIGNED,
-        allowNull: false,
-        references: {
-            model: 'payment',
-            key: 'id'
-        }
-    },
     shipping_method_id: {
         type: DataTypes.INTEGER.UNSIGNED,
-        allowNull: false,
+        allowNull: true,
         references: {
             model: 'shipping_method',
             key: 'id'
@@ -53,7 +46,7 @@ const Order = sequelize.define('Order', {
     },
     discount_id: {
         type: DataTypes.INTEGER.UNSIGNED,
-        allowNull: false,
+        allowNull: true,
         references: {
             model: 'discount',
             key: 'id'

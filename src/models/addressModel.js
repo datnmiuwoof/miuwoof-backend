@@ -23,11 +23,11 @@ const Address = sequelize.define('Address', {
         type: DataTypes.STRING(255),
         allowNull: false,
     },
-    town: {
+    ward: {
         type: DataTypes.STRING(255),
         allowNull: false,
     },
-    province: {
+    city: {
         type: DataTypes.STRING(255),
         allowNull: false,
     },

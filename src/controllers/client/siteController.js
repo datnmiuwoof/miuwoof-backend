@@ -21,7 +21,6 @@ class siteController {
                     },
                     {
                         model: product_variants,
-                        attributes: ["price"],
                         separate: true,
                         limit: 1,
                         order: [['price', 'ASC']],
@@ -51,7 +50,6 @@ class siteController {
                     },
                     {
                         model: product_variants,
-                        attributes: ["price"],
                         separate: true,
                         limit: 1,
                         order: [['price', 'ASC']],
@@ -85,7 +83,6 @@ class siteController {
                     },
                     {
                         model: product_variants,
-                        attributes: ["price"],
                         separate: true,
                         limit: 1,
                         order: [['price', 'ASC']],
@@ -109,7 +106,6 @@ class siteController {
                         through: { attributes: [] },
                     }, {
                         model: product_variants,
-                        attributes: ["price"],
                         separate: true,
                         limit: 1,
                         order: [['price', 'ASC']],
@@ -183,39 +179,36 @@ class siteController {
         try {
             const { name, email, message } = req.body;
 
-            res.status(200).json({
-                message: "dữ liệu trang chủ",
-                banners,
-                categories,
-                products_dog,
-                products_cat,
-                products_discount,
-                products_new,
-                posts,
-            })
+            if (!name || !email || !message) {
+                return res.status(400).json({
+                    message: "Vui lòng điền đầy đủ thông tin."
+                });
+            }
+
+            console.log(">>> Đang xử lý form liên hệ...");
+
+            // Gửi mail thông báo đến admin
+            await emailService.sendContactNotificationToAdmin({
+                name,
+                email,
+                message,
+            });
+
+            // Gửi mail phản hồi cho khách
+            await emailService.sendContactReply(email, name);
+
+            return res.status(200).json({
+                message: "Gửi liên hệ thành công! Cảm ơn bạn."
+            });
+
         } catch (error) {
-            res.status(500).json({ message: error.message })
+            console.error("Lỗi xử lý form liên hệ:", error);
+            return res.status(500).json({
+                message: "Có lỗi xảy ra, vui lòng thử lại."
+            });
         }
-        // Kiểm tra dữ liệu đầu vào
-        if (!name || !email || !message) {
-            return res
-                .status(400)
-                .json({ message: "Vui lòng điền đầy đủ thông tin." });
-        }
-        console.log("--- Bắt đầu xử lý Form Liên Hệ ---");
-        // 1. Gửi email thông báo cho Admin
-        await emailService.sendContactNotificationToAdmin({
-            name,
-            email,
-            message,
-        });
-        // 2. Gửi email phản hồi tự động cho người dùng
-        await emailService.sendContactReply(email, name);
-        res.status(200).json({ message: "Gửi liên hệ thành công! Cảm ơn bạn." });
-    } catch(error) {
-        console.error("Lỗi khi xử lý form liên hệ:", error);
-        res.status(500).json({ message: "Có lỗi xảy ra, vui lòng thử lại." });
     }
+
 }
 
 module.exports = new siteController;

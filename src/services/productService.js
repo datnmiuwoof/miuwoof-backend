@@ -289,6 +289,11 @@ class ProductService {
             }
           ]
         },
+        {
+          model: discount,
+          through: { attributes: [] },
+          attributes: ['discount_type', 'discount_value']
+        },
       ],
     });
 

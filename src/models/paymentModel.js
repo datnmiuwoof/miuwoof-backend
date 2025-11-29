@@ -11,22 +11,48 @@ const Payment = sequelize.define('Payment', {
         type: DataTypes.STRING(255),
         allowNull: false,
     },
+    // raw_data: {
+    //     type: DataTypes.LONGTEXT,
+    //     allowNull: true,
+    // },
+    callback_status: {
+        type: DataTypes.TINYINT,
+        allowNull: false,
+        defaultValue: 0,
+    },
     currency: {
         type: DataTypes.STRING(10),
         allowNull: false,
     },
+    amount: {
+        type: DataTypes.INTEGER.UNSIGNED,
+        allowNull: false,
+    },
     status: {
         type: DataTypes.TINYINT,
-        allowNull: false,     // 0 = pending, 1 = success, 2 = failed (tùy hệ thống)
+        allowNull: false,
     },
     method: {
-        type: DataTypes.STRING(50),
+        type: DataTypes.ENUM("momo", "cod", "vnpay"),
+        allowNull: true,
+    },
+    payment_gateway: {
+        type: DataTypes.STRING(20),
+        allowNull: true,
+    },
+    order_id: {
+        type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
+        references: {
+            model: 'order',
+            key: 'id'
+        }
     },
 }, {
     tableName: 'payment',
-    timestamps: true,      // ✅ Tạo created_at & updated_at
+    timestamps: true,
     underscored: true,
 });
+
 
 module.exports = Payment;
