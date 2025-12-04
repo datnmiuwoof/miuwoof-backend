@@ -1,65 +1,97 @@
-// // src/controllers/categoryController.js
-// const categoryService = require('../../services/categoryService');
+const categoryService = require("../../services/categoryService");
+const slugify = require("slugify");
 
-// class CategoryController {
+class CategoryController {
+    // Lấy tất cả category
+    async getAll(req, res) {
+        try {
+            const categories = await categoryService.getAllcategory();
+            res.status(200).json({
+                message: "Lấy danh sách category thành công",
+                data: categories,
+            });
+        } catch (error) {
+            res.status(500).json({
+                message: "Lỗi khi lấy dữ liệu getall",
+                error: error.message,
+            });
+        }
+    }
 
-//     async getAllCategories(req, res) {
-//         try {
-//             const categories = await categoryService.getAllCategories();
-//             res.status(200).json({ message: 'Lấy danh sách danh mục thành công!', data: categories });
-//         } catch (error) {
-//             res.status(500).json({ message: 'Lỗi hệ thống: ' + error.message });
-//         }
-//     }
+    // Tạo mới category
+    // async create(req, res) {
+    //     try {
+    //         const { name, description, is_active } = req.body;
 
-//     async getCategoryById(req, res) {
-//         try {
-//             const result = await categoryService.getCategoryById(req.params.id);
-//             res.status(200).json({ message: 'Lấy thông tin danh mục thành công!', data: result });
-//         } catch (error) {
-//             if (error.message.includes('Không tìm thấy')) {
-//                 return res.status(404).json({ message: error.message });
-//             }
-//             res.status(500).json({ message: 'Lỗi hệ thống: ' + error.message });
-//         }
-//     }
+    //         // Tự động tạo slug nếu chưa có
+    //         const slug = slugify(name, { lower: true, strict: true });
 
-//     async createCategory(req, res) {
-//         try {
-//             const newCategory = await categoryService.createCategory(req.body);
-//             res.status(201).json({ message: 'Tạo danh mục thành công!', data: newCategory });
-//         } catch (error) {
-//             res.status(500).json({ message: 'Lỗi hệ thống: ' + error.message });
-//         }
-//     }
+    //         const createCategory = await categoryService.createCategory({
+    //             name,
+    //             slug,
+    //             description,
+    //             is_active,
+    //         });
 
-//     async updateCategory(req, res) {
-//         try {
-//             const updatedCategory = await categoryService.updateCategory(req.params.id, req.body);
-//             res.status(200).json({ message: 'Cập nhật danh mục thành công!', data: updatedCategory });
-//         } catch (error) {
-//             if (error.message.includes('Không tìm thấy')) {
-//                 return res.status(404).json({ message: error.message });
-//             }
-//             res.status(500).json({ message: 'Lỗi hệ thống: ' + error.message });
-//         }
-//     }
+    //         res.status(201).json({
+    //             message: "Thêm category thành công",
+    //             data: createCategory,
+    //         });
+    //     } catch (error) {
+    //         res.status(500).json({
+    //             message: "Lỗi khi thêm dữ liệu",
+    //             error: error.message,
+    //         });
+    //     }
+    // }
 
-//     async deleteCategory(req, res) {
-//         try {
-//             await categoryService.deleteCategory(req.params.id);
-//             res.status(200).json({ message: 'Xóa danh mục thành công!' });
-//         } catch (error) {
-//             if (error.message.includes('Không tìm thấy')) {
-//                 return res.status(404).json({ message: error.message });
-//             }
-//             // Bắt lỗi khóa ngoại khi không thể xóa danh mục có chứa sản phẩm
-//             if (error.name === 'SequelizeForeignKeyConstraintError') {
-//                 return res.status(400).json({ message: 'Không thể xóa danh mục vì vẫn còn sản phẩm thuộc danh mục này.' });
-//             }
-//             res.status(500).json({ message: 'Lỗi hệ thống: ' + error.message });
-//         }
-//     }
-// }
+    // // Xóa category
+    // async destroy(req, res) {
+    //     try {
+    //         const { id } = req.params;
+    //         if (!id) return res.status(400).json({ message: "ID không tồn tại" });
 
-// module.exports = new CategoryController();
+    //         await categoryService.deleteCategory(id);
+    //         res.status(200).json({
+    //             message: "Xóa category thành công",
+    //         });
+    //     } catch (error) {
+    //         res.status(500).json({
+    //             message: "Lỗi khi xóa dữ liệu",
+    //             error: error.message,
+    //         });
+    //     }
+    // }
+
+    // // Cập nhật category
+    // async updateCategory(req, res) {
+    //     try {
+    //         const { id } = req.params;
+    //         if (isNaN(parseInt(id))) {
+    //             return res.status(400).json({ message: "ID không hợp lệ." });
+    //         }
+
+    //         const { name, description, is_active } = req.body;
+    //         const slug = slugify(name, { lower: true, strict: true });
+
+    //         const updatedCategory = await categoryService.updateCategory(id, {
+    //             name,
+    //             description,
+    //             slug,
+    //             is_active,
+    //         });
+
+    //         res.status(200).json({
+    //             message: "Cập nhật category thành công!",
+    //             data: updatedCategory,
+    //         });
+    //     } catch (error) {
+    //         res.status(500).json({
+    //             message: "Lỗi hệ thống khi cập nhật category.",
+    //             error: error.message,
+    //         });
+    //     }
+    // }
+}
+
+module.exports = new CategoryController();

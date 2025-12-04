@@ -74,17 +74,6 @@ class ProductService {
 
     let categoryIds = [cate.id];
 
-    // if (cate.parent_id === null) {
-    //   const children = await category.findAll({
-    //     where: { parent_id: cate.id },
-    //     attributes: ['id'],
-    //   });
-
-    //   if (children.length) {
-    //     categoryIds = children.map((c) => c.id);
-    //   }
-    // }
-
     if (cate.parent_id === null) {
       const children = await category.findAll({
         where: { parent_id: cate.id },

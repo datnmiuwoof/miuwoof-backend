@@ -19,6 +19,10 @@ const OrderDetail = sequelize.define('OrderDetail', {
         type: DataTypes.STRING(255),
         allowNull: true,
     },
+    image: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+    },
     sku: {
         type: DataTypes.STRING(100),
         allowNull: true,

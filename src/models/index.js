@@ -153,6 +153,7 @@ category.belongsToMany(product, {
   through: product_category,
   foreignKey: 'category_id',
   otherKey: 'product_id',
+
 });
 
 

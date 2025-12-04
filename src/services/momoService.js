@@ -66,6 +66,7 @@ class MomoService {
                     order_id: newOrder.id,
                     product_variant_id: item.product_variant_id,
                     name: item.name,
+                    image: item.Image,
                     price: item.price,
                     quantity: item.quantity,
                 }, { transaction: t });
@@ -175,6 +176,8 @@ class MomoService {
             transId
         } = webhookData;
 
+        console.log("orderId,resultCode,message, transId", orderId, resultCode, transId, message)
+
         const newOrderId = parseInt(orderId.split('-')[0], 10);
 
         if (resultCode !== 0 && resultCode !== "0") {
@@ -255,21 +258,20 @@ class MomoService {
                             product_variants_id: boughtVariantIds
                         },
                     });
-                    console.log(`Đã xóa sản phẩm khỏi giỏ của user`);
 
-                    // const remaining = await cart_item.count({
-                    //     where: { cart_id: cart.id },
-                    //     transaction: t
-                    // });
+                    const remaining = await cart_item.count({
+                        where: { cart_id: cart.id },
+                        transaction: t
+                    });
 
-                    // if (remaining === 0) {
-                    //     await cartModel.destroy({
-                    //         where: { user_id: user_id },
-                    //         transaction: t
-                    //     });
+                    if (remaining === 0) {
+                        await cartModel.destroy({
+                            where: { user_id: user_id },
+                            transaction: t
+                        });
 
-                    //     console.log(`Giỏ của user trống → đã xóa luôn cart`);
-                    // }
+                        console.log(`Giỏ của user trống → đã xóa luôn cart`);
+                    }
                 }
             }
 

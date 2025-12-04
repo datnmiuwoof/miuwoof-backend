@@ -20,8 +20,12 @@ const Order = sequelize.define('Order', {
         type: DataTypes.DECIMAL,
         allowNull: false,
     },
+    is_deleted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
     payment_status: {
-        type: DataTypes.ENUM('pending', 'paid', 'failed', 'canceled'),
+        type: DataTypes.ENUM('pending', 'paid', 'failed', 'canceled', 'refund'),
         defaultValue: 'pending',
     },
     order_note: {

@@ -3,13 +3,19 @@ const orderDetailModel = require("../models/orderDetailModel");
 const addressModel = require("../models/addressModel");
 const cartModel = require("../models/cartModel");
 const cartItemModel = require("../models/cartItemModel");
-const { sequelize, product_variants, cart } = require("../models");
-const { Op } = require("sequelize");
+const { sequelize, product_variants, cart, product_image, address } = require("../models");
+const { Op, Model } = require("sequelize");
+
+const flow = ["pending", "confirmed", "shipping", "completed", "cancelled", "refund"];
+function getNextStatus(current) {
+    const i = flow.indexOf(current);
+    return flow[i + 1] || current;
+}
 
 class orderService {
+
+    // tạo đơn hàng khi người dùng vừa bấm thanh toán
     async createOrder({ orderData, userId }) {
-        console.log("log orderdata, userId", orderData);
-        console.log("log orderdata, userId", userId);
 
         const t = await sequelize.transaction();
         try {
@@ -49,7 +55,7 @@ class orderService {
                 address_id: addressId,
                 total_amount: totalPrice,
                 order_status: "pending",
-                payment_status: "pending",
+                payment_status: "paid",
                 order_date: new Date(),
                 shipping_method_id: orderData.shipping_method_id || 1,
                 discount_id: orderData.discount_id || null
@@ -62,6 +68,7 @@ class orderService {
                     order_id: newOrder.id,
                     product_variant_id: item.product_variant_id,
                     name: item.name,
+                    image: item.Image,
                     price: item.price,
                     quantity: item.quantity,
                 }, { transaction: t });
@@ -129,6 +136,162 @@ class orderService {
             throw new Error("Tạo đơn hàng thất bại.");
         }
     }
+
+    // trang tất cả các đơn hàng
+    async checkAllOrder(user) {
+        try {
+            const dataOrder = await orderModel.findAll(
+                {
+                    where: { user_id: user },
+                    include: [
+                        {
+                            model: orderDetailModel,
+                            include: [
+                                {
+                                    model: product_variants,
+                                }
+                            ]
+                        }
+                    ]
+                }
+            );
+
+            return dataOrder;
+        } catch (error) {
+            return false;
+        }
+
+    }
+
+    // trang các đơn hàng theo trang thái
+    async checkOrderStatus(user, status) {
+        try {
+            const dataOrder = await orderModel.findAll(
+                {
+                    where: { user_id: user, order_status: status },
+                    include: [
+                        {
+                            model: orderDetailModel,
+                            include: [
+                                {
+                                    model: product_variants,
+                                }
+                            ]
+                        }
+                    ]
+                }
+            );
+
+            return dataOrder;
+        } catch (error) {
+            return false;
+        }
+
+    }
+
+    // trang đơn hàng chi tiết
+    async orderDetail(detail_id) {
+        try {
+            const dataOrder = await orderDetailModel.findOne(
+                {
+                    where: { id: detail_id },
+                    include: [
+                        {
+                            model: product_variants,
+                        },
+                        {
+                            model: orderModel
+                        }
+                    ],
+                }
+            );
+
+            return dataOrder;
+        } catch (error) {
+            return false;
+        }
+
+    }
+
+    // trang đơn hàng của admin
+    async getAlladminorder() {
+        try {
+            const orderAdmin = await orderModel.findAll({
+                include: [
+                    { model: orderDetailModel },
+                    { model: address }
+                ]
+            });
+            return orderAdmin;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    // trang chi tiết của đơn hàng của Admin
+    async orderAdminDetail(id) {
+        try {
+            const orderAdmin = await orderModel.findOne({
+                where: { id: id },
+                include: [
+                    {
+                        model: orderDetailModel,
+                        include: [
+                            { model: product_variants }
+                        ]
+                    },
+                    { model: address },
+                ]
+            });
+            return orderAdmin;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    async updateOrderStatus(id) {
+        try {
+            const order = await orderModel.findByPk(id);
+            if (!order) return false;
+
+            const nextStatus = getNextStatus(order.order_status);
+
+            if (nextStatus === "cancelled") return
+
+            order.order_status = nextStatus;
+
+            await order.save();
+            return order;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    // async cancelledOrderOrder(orderId) {
+    //     try {
+    //         const order = await orderModel.findOne({
+    //             where: { id: orderId },
+    //             include: [
+    //                 {
+    //                     model: orderDetailModel,
+    //                     attributes: [],
+    //                     include: [
+    //                         { model: product_variants }
+    //                     ]
+    //                 }
+    //             ]
+    //         });
+    //         if (!order) return false;
+    //         return order;
+
+
+    //     } catch (error) {
+
+    //     }
+
+
+
+    // }
 };
 
 module.exports = new orderService();

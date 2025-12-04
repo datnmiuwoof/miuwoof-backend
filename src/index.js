@@ -7,16 +7,18 @@ const siteRouter = require('./router/client/siterouter');
 const productRouter = require('./router/client/productsrouter');
 const productAdminRouter = require("./router/admin/productAdminrouter");
 const categoryAdminRouter = require("./router/admin/categoryAdminrouter");
+const categories = require("./router/client/categoriesrouter")
 const userAdminRouter = require("./router/admin/userAdminrouter");
 const userRouter = require("./router/client/userrouter");
 const cartRouter = require("./router/client/cartrouter");
 const paymentRouter = require("./router/client/paymentrouter");
 const addressRouter = require("./router/client/addressrouter");
 const statusRouter = require("./router/client/statusrouter");
+const orderAdmin = require("./router/admin/orderAdminrouter")
 
 const app = express();
 const port = process.env.PORT || 3000;
-// Middleware để parse JSON
+
 app.use(express.json());
 app.use(cookieParser());
 
@@ -38,8 +40,10 @@ app.use("/", siteRouter);
 app.use("/product", productRouter);
 app.use("/user", userRouter);
 app.use("/api/products", productAdminRouter);
+app.use("/order", orderAdmin)
 app.use("/api/categorys", categoryAdminRouter);
 app.use("/api/users", userAdminRouter);
+app.use("/categories", categories);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", paymentRouter);
 app.use("/api/address", addressRouter);

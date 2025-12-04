@@ -1,12 +1,16 @@
 // src/services/productService.js
-// const {
-//     sequelize,
-//     category,
-// } = require("../models");
+const {
+    sequelize,
+} = require("../models");
+
+const productVariants = require("../models/productVariants");
+const product_category = require("../models/productCategoryModel")
+const { product } = require("../models")
 const category = require("../models/categoryModel");
 
 class CategoryService {
 
+    // dữ liệu của menu client
     async getAllcategory() {
         const getAllcategory = await category.findAll({
             attributes: ['id', 'name', 'slug', 'parent_id'],
@@ -15,16 +19,43 @@ class CategoryService {
     }
 
     async getAllCategories() {
-        // Lấy tất cả danh mục cha (không có parent_id)
-        // và include (lồng) các danh mục con của chúng vào
         return await category.findAll({
             where: { parent_id: null },
             include: [{
                 model: category,
-                as: 'children', // Alias này phải khớp với models/index.js
+                as: 'children',
             }]
         });
     }
+
+    // lấy dữ liệu cho admin
+    async getAllCategoryAdmin() {
+        try {
+            const categories = await category.findAll({
+                include: [
+                    {
+                        model: product,
+                        attributes: ["id"],
+                        as: 'Products',
+                        through: { attributes: [] },
+                        include: [
+                            {
+                                model: productVariants,
+                                attributes: ["available_quantity"]
+                            }
+                        ]
+                    }
+                ]
+            });
+
+            return categories;
+        } catch (error) {
+            console.error('Lỗi:', error);
+            return [];
+        }
+    }
+
+
 
     // tạo sản phẩm
     async createCategory(categoryData) {
@@ -49,16 +80,22 @@ class CategoryService {
     }
 
     // lấy chi tiết sản phẩm admin
-    async getCategoryById(id) {
-        const result = await category.findOne({
+    async getCategoryDetail(id) {
+        const categoryDetail = await category.findOne({
             where: { id },
+            include: [{ model: category, as: "parent" }]
         });
 
-        if (!result) {
-            throw new Error("Không tìm thấy sản phẩm.");
-        }
-        return result;
+        if (!categoryDetail) throw new Error("Không tìm thấy category");
+
+        const allCategories = await category.findAll({
+            where: { parent_id: null },
+            attributes: ["id", "name", "parent_id"]
+        });
+
+        return { category: categoryDetail, allCategories };
     }
+
 
     // lấy chi tiết sản phẩm client
     async getCategoryBySlug(slug) {
@@ -81,39 +118,20 @@ class CategoryService {
                 throw new Error("Không tìm thấy sản phẩm để cập nhật.");
             }
 
-            // 1. Cập nhật thông tin chính của sản phẩm
-            // ✅ Chỉ cập nhật các trường được cung cấp trong categoryData
-            await categoryToUpdate.update(
+            const categoryUpdate = await categoryToUpdate.update(
                 {
                     name: categoryData.name,
                     slug: categoryData.slug,
                     description: categoryData.description,
                     is_active: categoryData.is_active,
+                    parent_id: categoryData.parent_id || null,
                 },
                 { transaction: t }
             );
 
-            // if (categoryData.images) {
-            //     await category_image.destroy(
-            //         { where: { category_id: categoryId } },
-            //         { transaction: t }
-            //     );
-            //     if (categoryData.images.length > 0) {
-            //         const imagesData = categoryData.images.map((img) => ({
-            //             ...img,
-            //             category_id: categoryId,
-            //             image: img.url,
-            //         }));
-            //         await category_image.bulkCreate(imagesData, { transaction: t });
-            //     }
-            // }
-
             await t.commit();
 
-            // Trả về dữ liệu đã được cập nhật đầy đủ
-            return await category.findByPk(categoryId, {
-                include: [category],
-            });
+            return categoryUpdate
         } catch (error) {
             await t.rollback();
             console.error("Lỗi service cập nhật sản phẩm:", error);
