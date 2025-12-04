@@ -13,6 +13,7 @@ class CategoryService {
     // dữ liệu của menu client
     async getAllcategory() {
         const getAllcategory = await category.findAll({
+            where: { is_deleted: false },
             attributes: ['id', 'name', 'slug', 'parent_id'],
         });
         return getAllcategory;
@@ -32,18 +33,13 @@ class CategoryService {
     async getAllCategoryAdmin() {
         try {
             const categories = await category.findAll({
+                where: { is_deleted: false },
                 include: [
                     {
                         model: product,
                         attributes: ["id"],
                         as: 'Products',
                         through: { attributes: [] },
-                        include: [
-                            {
-                                model: productVariants,
-                                attributes: ["available_quantity"]
-                            }
-                        ]
                     }
                 ]
             });
@@ -66,6 +62,7 @@ class CategoryService {
                     name: categoryData.name,
                     slug: categoryData.slug,
                     description: categoryData.description,
+                    parent_id: categoryData.parent_id,
                     is_active: categoryData.is_active,
                 },
                 { transaction: t }
@@ -149,6 +146,77 @@ class CategoryService {
         await categoryToDelete.destroy();
     }
     // ...
+
+    async softDelete(id) {
+        const child = await category.findOne({
+            where: { parent_id: id, is_deleted: false }
+        });
+
+        if (child) {
+            throw new Error("Danh mục này đang có danh mục con. Hãy xóa hoặc chuyển danh mục con trước.");
+        }
+
+        const result = await category.update(
+            {
+                is_deleted: true,
+                include: [
+                    { model: product }
+                ]
+            },
+            { where: { id } }
+        );
+
+        return result;
+    }
+
+    //khôi phục danh mục
+    async restoreCaegory(id) {
+        try {
+            const dataCategory = await category.findByPk(id);
+            if (!dataCategory) return ({ success: false, message: 'Không tìm thấy danh mục' });
+
+            if (!dataCategory.is_deleted) {
+                return ({ success: false, message: 'Danh mục này chưa bị xóa.' });
+            }
+
+            dataCategory.is_deleted = false;
+            await dataCategory.save();
+
+            return ({ success: true, message: 'Khôi phục danh mục thành công', dataCategory });
+        } catch (error) {
+            return error
+        }
+
+    }
+
+    async getSoftDeleted() {
+        try {
+            const data = await category.findAll({
+                where: { is_deleted: true },
+                include: [
+                    {
+                        model: product,
+                        attributes: ["id"],
+                        as: 'Products',
+                        through: { attributes: [] },
+                    }
+                ]
+            });
+
+            return {
+                success: true,
+                data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: "Lỗi khi lấy danh mục đã xóa",
+                error: error.message
+            };
+        }
+    }
+
+
 }
 
 module.exports = new CategoryService();

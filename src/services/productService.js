@@ -18,6 +18,7 @@ const fs = require("fs");
 
 class ProductService {
 
+
   //lấy all sản phẩm ở admin
   async getAllProducts(page = 1, limit = 10) {
 
@@ -63,6 +64,83 @@ class ProductService {
         limit
       }
     };
+  }
+
+
+  // tạo sản phẩm
+  async createProduct(productData, files) {
+    const t = await sequelize.transaction();
+    try {
+      const categories = JSON.parse(productData.category_ids);
+      const newproduct = await product.create(
+        {
+          name: productData.name,
+          slug: slug(productData.name, { lower: true }),
+          description: productData.description,
+        },
+        {
+          transaction: t,
+        });
+
+      for (let category of categories) {
+        const productCategory = await product_category.create({
+          product_id: newproduct.id,
+          category_id: category,
+        }, { transaction: t })
+      }
+
+
+      let variants = productData.variants
+      if (typeof variants === "string") {
+        variants = JSON.parse(variants);
+      }
+
+      for (let i = 0; i < variants.length; i++) {
+        const v = variants[i];
+
+        const newVariants = await product_variants.create({
+          product_id: newproduct.id,
+          size: v.size,
+          style: v.style,
+          unit: v.unit,
+          flavor: v.flavor,
+          price: v.price,
+        }, { transaction: t });
+
+        const fileimage = files.filter(v => v.fieldname == `variants_images_${i}`);
+
+        if (fileimage && fileimage.length > 0) {
+          const image = [];
+          for (let file of fileimage) {
+            const url = await uploadService.uploadImage(file.path);
+            image.push({
+              product_variants_id: newVariants.id,
+              image: url,
+            });
+
+            const absolutePath = path.resolve(file.path);
+            if (fs.existsSync(absolutePath)) {
+              fs.unlinkSync(absolutePath);
+            }
+          }
+
+          const imageUpload = await Promise.all(image)
+          await product_image.bulkCreate(imageUpload, { transaction: t })
+        }
+      }
+
+      await t.commit();
+      return {
+        message: "Tạo sản phẩm thành công",
+        product: newproduct,
+      };
+
+
+    } catch (error) {
+      await t.rollback();
+      console.error("❌ Lỗi khi tạo sản phẩm:", error);
+      throw new Error("Không thể tạo sản phẩm, vui lòng thử lại sau.");
+    }
   }
 
   //lấy sản phẩm theo loại
@@ -151,81 +229,6 @@ class ProductService {
   }
 
 
-  // tạo sản phẩm
-  async createProduct(productData, files) {
-    const t = await sequelize.transaction();
-    try {
-      const categories = JSON.parse(productData.category_ids);
-      const newproduct = await product.create(
-        {
-          name: productData.name,
-          slug: slug(productData.name, { lower: true }),
-          description: productData.description,
-        },
-        {
-          transaction: t,
-        });
-
-      for (let category of categories) {
-        const productCategory = await product_category.create({
-          product_id: newproduct.id,
-          category_id: category,
-        }, { transaction: t })
-      }
-
-
-      let variants = productData.variants
-      if (typeof variants === "string") {
-        variants = JSON.parse(variants);
-      }
-
-      for (let i = 0; i < variants.length; i++) {
-        const v = variants[i];
-
-        const newVariants = await product_variants.create({
-          product_id: newproduct.id,
-          size: v.size,
-          style: v.style,
-          unit: v.unit,
-          flavor: v.flavor,
-          price: v.price,
-        }, { transaction: t });
-
-        const fileimage = files.filter(v => v.fieldname == `variants_images_${i}`);
-
-        if (fileimage && fileimage.length > 0) {
-          const image = [];
-          for (let file of fileimage) {
-            const url = await uploadService.uploadImage(file.path);
-            image.push({
-              product_variants_id: newVariants.id,
-              image: url,
-            });
-
-            const absolutePath = path.resolve(file.path);
-            if (fs.existsSync(absolutePath)) {
-              fs.unlinkSync(absolutePath);
-            }
-          }
-
-          const imageUpload = await Promise.all(image)
-          await product_image.bulkCreate(imageUpload, { transaction: t })
-        }
-      }
-
-      await t.commit();
-      return {
-        message: "Tạo sản phẩm thành công",
-        product: newproduct,
-      };
-
-
-    } catch (error) {
-      await t.rollback();
-      console.error("❌ Lỗi khi tạo sản phẩm:", error);
-      throw new Error("Không thể tạo sản phẩm, vui lòng thử lại sau.");
-    }
-  }
 
   // lấy chi tiết sản phẩm admin
   async getProductById(id) {

@@ -14,7 +14,7 @@ const cartRouter = require("./router/client/cartrouter");
 const paymentRouter = require("./router/client/paymentrouter");
 const addressRouter = require("./router/client/addressrouter");
 const statusRouter = require("./router/client/statusrouter");
-const orderAdmin = require("./router/admin/orderAdminrouter")
+const orderAdmin = require("./router/admin/orderAdminrouter");
 
 const app = express();
 const port = process.env.PORT || 3000;

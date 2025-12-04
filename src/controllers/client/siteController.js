@@ -5,12 +5,12 @@ class siteController {
     async home(req, res) {
         try {
             const banners = await banner.findAll();
-            const categories = await category.findAll(
-                {
-                    attributes: ['id', 'name', 'parent_id'],
-                    where: { parent_id: null },
+            const categories = await category.findAll({
+                attributes: ['id', 'name', 'parent_id'],
+                where: {
+                    is_deleted: false,
                 }
-            );
+            });
             const products_dog = await product.findAll({
                 where: { is_deleted: false },
                 include: [

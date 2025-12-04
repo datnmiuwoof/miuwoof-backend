@@ -2,6 +2,7 @@
 const productService = require("../../services/productService");
 
 class ProductController {
+
     // Lấy tất cả sản phẩm
     async getAllProducts(req, res) {
         try {
