@@ -1,6 +1,6 @@
 const { sequelize } = require("../config/database");
 const user = require("./userModel");
-const product = require("./productModel");
+const product = require("./productmodel");
 const product_image = require("./productImageModel");
 const category = require("./categoryModel");
 const product_variants = require("./productVariants");

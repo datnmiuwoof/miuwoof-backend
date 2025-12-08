@@ -11,9 +11,18 @@ const {
 } = require("../models");
 const Category = require("../models/categoryModel");
 // const { create } = require("../controllers/admin/categoryController");
-const slug = require("slugify")
+const slug = require("slugify");
+const { Op, Sequelize } = require("sequelize");
 const uploadService = require("../services/uploadService");
 const fs = require("fs");
+
+function removeVietnameseTones(str) {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove accents
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D");
+}
 
 
 class ProductService {
@@ -65,7 +74,6 @@ class ProductService {
       }
     };
   }
-
 
   // tạo sản phẩm
   async createProduct(productData, files) {
@@ -144,8 +152,7 @@ class ProductService {
   }
 
   //lấy sản phẩm theo loại
-  async getCollections(slug) {
-
+  async getCollections({ slug, limit }) {
     const cate = await category.findOne({ where: { slug } });
 
     if (!cate) return [];
@@ -165,6 +172,7 @@ class ProductService {
 
     const getCollections = await product.findAll({
       where: { is_deleted: false },
+      limit: limit,
       include: [
         {
           model: Category,
@@ -197,9 +205,10 @@ class ProductService {
   }
 
   // lấy sản phẩm giảm giá
-  async getAllDiscount() {
+  async getAllDiscount(limit) {
     const productsDiscount = await product.findAll({
       where: { is_deleted: false },
+      limit: limit,
       include: [
         {
           model: product_variants,
@@ -227,8 +236,6 @@ class ProductService {
 
     return productsDiscount;
   }
-
-
 
   // lấy chi tiết sản phẩm admin
   async getProductById(id) {
@@ -570,6 +577,140 @@ class ProductService {
 
     await productToDelete.destroy();
   }
+
+  // async searchProducts(keyword) {
+  //   if (!keyword || keyword.trim() === "") return [];
+
+  //   const key = removeVietnameseTones(keyword).toLowerCase();
+
+  //   // Lấy hết sản phẩm (vì MySQL không hỗ trợ tìm không dấu ngon)
+  //   const products = await product.findAll({
+  //     attributes: ["id", "name", "slug", "views", "is_hot"],
+  //     where: {
+  //       is_deleted: false
+  //     },
+  //     include: [
+  //       {
+  //         model: category,
+  //         attributes: ["id", "name", "slug"],
+  //         through: { attributes: [] }
+  //       },
+  //       {
+  //         model: product_variants,
+  //         where: { is_deleted: false },
+  //         required: false,
+  //         attributes: ["id", "price"],
+  //         include: [
+  //           {
+  //             model: product_image,
+  //             attributes: ["image"],
+  //             limit: 1
+  //           }
+  //         ]
+  //       }
+  //     ],
+  //     order: [["created_at", "DESC"]]
+  //   });
+
+  //   return products.filter(p => {
+  //     const nameNoTone = removeVietnameseTones(p.name || "").toLowerCase();
+  //     return nameNoTone.includes(key);
+  //   });
+  // }
+
+  // Phiên bản tối ưu nhất = kết hợp cả 2 cách
+
+  async searchProducts(keyword) {
+    if (!keyword?.trim()) return [];
+
+    const search = this.#removeTone(keyword).toLowerCase();
+
+    try {
+      const products = await product.findAll({
+        where: {
+          is_deleted: false
+        },
+        attributes: ['id', 'name', 'slug', 'views', 'is_hot'],
+        include: [
+          {
+            model: category,
+            attributes: ['id', 'name', 'slug'],
+            through: { attributes: [] }
+          },
+          {
+            model: product_variants,
+            where: { is_deleted: false },
+            required: false,
+            attributes: ['id', 'price'],
+            include: [{
+              model: product_image,
+              attributes: ['image'],
+              limit: 1
+            }]
+          }
+        ],
+        order: [['id', 'DESC']],
+        limit: 60
+      });
+
+      // Lọc bằng JS – đơn giản, không lỗi, chạy ngon với MariaDB
+      const filtered = products
+        .map(p => p.get({ plain: true }))
+        .filter(p => this.#removeTone(p.name || "").toLowerCase().includes(search));
+
+      return filtered.sort((a, b) => {
+        const nameA = this.#removeTone(a.name).toLowerCase();
+        const nameB = this.#removeTone(b.name).toLowerCase();
+        if (nameA.startsWith(search) && !nameB.startsWith(search)) return -1;
+        if (!nameA.startsWith(search) && nameB.startsWith(search)) return 1;
+        return 0;
+      });
+
+    } catch (error) {
+      console.error("Search error:", error.message);
+      return []; // không bao giờ crash nữa
+    }
+  }
+
+  #removeTone(str = "") {
+    return str
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/Đ/g, 'D');
+  }
+
+
+  async relatedProduct(categoryId, productId) {
+    try {
+      const result = await product.findAll({
+        where: {
+          id: { [Op.ne]: productId }
+        },
+        include: [
+          {
+            model: category,
+            where: { id: categoryId },
+            through: { attributes: [] }
+          },
+          {
+            model: product_variants,
+            include: [
+              { model: product_image }
+            ]
+          }
+        ],
+        order: sequelize.literal("RAND()"),
+        limit: 10,
+      })
+
+      return result;
+    } catch (error) {
+      return null;
+    }
+  }
+
+
 }
 
 module.exports = new ProductService();
