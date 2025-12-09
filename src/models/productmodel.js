@@ -11,6 +11,10 @@ const Product = sequelize.define('Product', {
         type: DataTypes.STRING(255),
         allowNull: false,
     },
+    name_no_tone: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+    },
     slug: {
         type: DataTypes.STRING(255),
         allowNull: true,

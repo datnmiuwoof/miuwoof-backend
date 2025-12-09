@@ -15,7 +15,11 @@ const paymentRouter = require("./router/client/paymentrouter");
 const addressRouter = require("./router/client/addressrouter");
 const statusRouter = require("./router/client/statusrouter");
 const orderAdmin = require("./router/admin/orderAdminrouter");
+
 const postAdminRouter = require("./router/admin/postAdminRouter");
+
+const AdminDashboard = require("./router/admin/AdminDashboard");
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -41,7 +45,8 @@ app.use("/", siteRouter);
 app.use("/product", productRouter);
 app.use("/user", userRouter);
 app.use("/api/products", productAdminRouter);
-app.use("/order", orderAdmin);
+// app.use("/order", orderAdmin);
+app.use("/api/admin/orders", orderAdmin)
 app.use("/api/categorys", categoryAdminRouter);
 app.use("/api/users", userAdminRouter);
 app.use("/categories", categories);
@@ -49,7 +54,12 @@ app.use("/api/cart", cartRouter);
 app.use("/api/order", paymentRouter);
 app.use("/api/address", addressRouter);
 app.use("/checkout/success", statusRouter);
+
 app.use("/api/posts", postAdminRouter);
+
+app.use("/AdminDashboard", AdminDashboard);
+
+
 
 (async () => {
   await connectDB();

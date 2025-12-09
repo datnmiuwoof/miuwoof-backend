@@ -4,7 +4,7 @@ const addressModel = require("../models/addressModel");
 const cartModel = require("../models/cartModel");
 const cartItemModel = require("../models/cartItemModel");
 const { sequelize, product_variants, cart, product_image, address } = require("../models");
-const { Op, Model } = require("sequelize");
+const { Op } = require("sequelize");
 
 const flow = ["pending", "confirmed", "shipping", "completed", "cancelled", "refund"];
 function getNextStatus(current) {
@@ -213,16 +213,39 @@ class orderService {
 
     }
 
-    // trang đơn hàng của admin
-    async getAlladminorder() {
+    //tất cả đơn hàng của admin
+    async getAlladminorder(page, limit, status) {
         try {
-            const orderAdmin = await orderModel.findAll({
+            const offset = (page - 1) * limit;
+            let where = {};
+
+            if (status && status !== "all") {
+                where.order_status = status;
+            }
+
+            const result = await orderModel.findAndCountAll({
+                where,
                 include: [
                     { model: orderDetailModel },
                     { model: address }
-                ]
+                ],
+                limit,
+                offset,
+                order: [["id", "DESC"]],
             });
-            return orderAdmin;
+
+            const allOrders = await orderModel.findAll();
+            const statusCounts = {
+                all: allOrders.length,
+                pending: allOrders.filter(o => o.order_status === 'pending').length,
+                confirmed: allOrders.filter(o => o.order_status === 'confirmed').length,
+                shipping: allOrders.filter(o => o.order_status === 'shipping').length,
+                completed: allOrders.filter(o => o.order_status === 'completed').length,
+                cancelled: allOrders.filter(o => o.order_status === 'cancelled').length,
+                refund: allOrders.filter(o => o.order_status === 'refund').length,
+            };
+
+            return { result, statusCounts };
         } catch (error) {
             return false;
         }

@@ -4,13 +4,23 @@ class OrderController {
 
     async getAllOrder(req, res) {
         try {
-            const result = await orderService.getAlladminorder();
+            const page = parseInt(req.query.page) || 1;
+            const status = req.query.status || "all";
+            const limit = 10;
 
-            if (!result) {
+            const data = await orderService.getAlladminorder(page, limit, status);
+
+            if (!data) {
                 return res.status(500).json({ message: "Lỗi khi lấy đơn hàng" });
             }
 
-            return res.status(200).json(result);
+            return res.status(200).json({
+                data: data.result.rows,
+                total: data.result.count,
+                statusCounts: data.statusCounts,
+                page,
+                totalPages: Math.ceil(data.result.count / limit),
+            });
 
         } catch (error) {
             return res.status(500).json({ error: error.message });
@@ -19,8 +29,9 @@ class OrderController {
 
 
     async getDetailOrder(req, res) {
-        const { id } = req.params;
+
         try {
+            const { id } = req.params;
             if (!id) res.status(201).json({ message: "không tìm thấy đơn hàng" });
             const result = await orderService.orderAdminDetail(id);
 

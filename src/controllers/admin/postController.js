@@ -15,7 +15,7 @@ class PostController {
     }
   }
 
-  // GET BY ID
+
   async getById(req, res) {
     try {
       const post = await postService.getPostById(req.params.id);

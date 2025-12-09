@@ -11,12 +11,25 @@ const {
 } = require("../models");
 const Category = require("../models/categoryModel");
 // const { create } = require("../controllers/admin/categoryController");
-const slug = require("slugify")
+const slug = require("slugify");
+const { Op, fn, col, literal } = require("sequelize");
 const uploadService = require("../services/uploadService");
 const fs = require("fs");
+const path = require('path');
+
+function removeTone(str = "") {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase()
+    .trim();
+}
 
 
 class ProductService {
+
 
   //lấy all sản phẩm ở admin
   async getAllProducts(page = 1, limit = 10) {
@@ -65,92 +78,6 @@ class ProductService {
     };
   }
 
-  //lấy sản phẩm theo loại
-  async getCollections(slug) {
-
-    const cate = await category.findOne({ where: { slug } });
-
-    if (!cate) return [];
-
-    let categoryIds = [cate.id];
-
-    if (cate.parent_id === null) {
-      const children = await category.findAll({
-        where: { parent_id: cate.id },
-        attributes: ['id'],
-      });
-      if (children.length) {
-        categoryIds = [cate.id, ...children.map((c) => c.id)];
-      }
-    }
-
-
-    const getCollections = await product.findAll({
-      where: { is_deleted: false },
-      include: [
-        {
-          model: Category,
-          through: { attributes: [] },
-          attributes: ['id', 'name', 'slug'],
-          where: { id: categoryIds },
-          required: true,
-        },
-        {
-          model: product_variants,
-          attributes: ["price"],
-          separate: true,
-          limit: 1,
-          order: [['price', 'ASC']],
-          include: [
-            {
-              model: product_image,
-              attributes: ['image']
-            }
-          ]
-        },
-        {
-          model: discount,
-          attributes: ['id', 'discount_value', 'discount_type', 'is_active'],
-        },
-      ],
-    });
-
-    return getCollections;
-  }
-
-  // lấy sản phẩm giảm giá
-  async getAllDiscount() {
-    const productsDiscount = await product.findAll({
-      where: { is_deleted: false },
-      include: [
-        {
-          model: product_variants,
-          attributes: ["price"],
-          separate: true,
-          limit: 1,
-          order: [['price', 'ASC']],
-          include: [
-            {
-              model: product_image,
-              attributes: ['image']
-            }
-          ]
-        },
-        {
-          model: discount,
-          as: 'Discounts',
-          attributes: ['id', 'discount_value', 'discount_type', 'is_active'],
-          through: { attributes: [] },
-          where: { is_active: true },
-          required: true
-        }
-      ]
-    });
-
-    return productsDiscount;
-  }
-
-
   // tạo sản phẩm
   async createProduct(productData, files) {
     const t = await sequelize.transaction();
@@ -159,6 +86,7 @@ class ProductService {
       const newproduct = await product.create(
         {
           name: productData.name,
+          name_no_tone: removeTone(productData.name),
           slug: slug(productData.name, { lower: true }),
           description: productData.description,
         },
@@ -225,6 +153,92 @@ class ProductService {
       console.error("❌ Lỗi khi tạo sản phẩm:", error);
       throw new Error("Không thể tạo sản phẩm, vui lòng thử lại sau.");
     }
+  }
+
+  //lấy sản phẩm theo loại
+  async getCollections({ slug, limit }) {
+    const cate = await category.findOne({ where: { slug } });
+
+    if (!cate) return [];
+
+    let categoryIds = [cate.id];
+
+    if (cate.parent_id === null) {
+      const children = await category.findAll({
+        where: { parent_id: cate.id },
+        attributes: ['id'],
+      });
+      if (children.length) {
+        categoryIds = [cate.id, ...children.map((c) => c.id)];
+      }
+    }
+
+
+    const getCollections = await product.findAll({
+      where: { is_deleted: false },
+      limit: limit,
+      include: [
+        {
+          model: Category,
+          through: { attributes: [] },
+          attributes: ['id', 'name', 'slug'],
+          where: { id: categoryIds },
+          required: true,
+        },
+        {
+          model: product_variants,
+          attributes: ["price"],
+          separate: true,
+          limit: 1,
+          order: [['price', 'ASC']],
+          include: [
+            {
+              model: product_image,
+              attributes: ['image']
+            }
+          ]
+        },
+        {
+          model: discount,
+          attributes: ['id', 'discount_value', 'discount_type', 'is_active'],
+        },
+      ],
+    });
+
+    return getCollections;
+  }
+
+  // lấy sản phẩm giảm giá
+  async getAllDiscount(limit) {
+    const productsDiscount = await product.findAll({
+      where: { is_deleted: false },
+      limit: limit,
+      include: [
+        {
+          model: product_variants,
+          attributes: ["price"],
+          separate: true,
+          limit: 1,
+          order: [['price', 'ASC']],
+          include: [
+            {
+              model: product_image,
+              attributes: ['image']
+            }
+          ]
+        },
+        {
+          model: discount,
+          as: 'Discounts',
+          attributes: ['id', 'discount_value', 'discount_type', 'is_active'],
+          through: { attributes: [] },
+          where: { is_active: true },
+          required: true
+        }
+      ]
+    });
+
+    return productsDiscount;
   }
 
   // lấy chi tiết sản phẩm admin
@@ -309,6 +323,7 @@ class ProductService {
 
       if (productData.name && productData.name.trim() !== "")
         productUpdate.name = productData.name;
+      productUpdate.name_no_tone = removeTone(productData.name);
 
       if (productData.description && productData.description.trim() !== "")
         productUpdate.description = productData.description;
@@ -324,6 +339,7 @@ class ProductService {
       await productToUpdate.update(
         {
           name: productUpdate.name ?? productToUpdate.name,
+          name_no_tone: productUpdate.name ?? removeTone(productData.name),
           slug: slugValue,
           description: productUpdate.description ?? productToUpdate.description,
         },
@@ -567,6 +583,121 @@ class ProductService {
 
     await productToDelete.destroy();
   }
+
+  // Phiên bản tối ưu nhất = kết hợp cả 2 cách
+  async searchProducts(search, limit, offset) {
+    try {
+      const keyword = search?.trim() || "";
+
+      if (!keyword) {
+        return await product.findAndCountAll({
+          where: { is_deleted: false },
+          include: [
+            {
+              model: product_variants,
+              include: [
+                { model: product_image }
+              ]
+            }
+          ],
+          limit: Number(limit),
+          offset: Number(offset),
+          order: [["id", "DESC"]],
+        });
+      }
+
+      // ✔ SỬA LỖI 1: đưa keywordNoTone lên trước words
+      const keywordNoTone = removeTone(keyword).toLowerCase();
+      const words = keywordNoTone.split(" ").filter(w => w.length > 0);
+
+      let results = await product.findAndCountAll({
+        include: [
+          {
+            model: product_variants,
+            include: [
+              { model: product_image }
+            ]
+          }
+        ],
+        where: {
+          is_deleted: false,
+
+          // ✔ SỬA LỖI 2: search chính phải theo nguyên cụm
+          name_no_tone: { [Op.like]: `%${keywordNoTone}%` }
+        },
+        limit: Number(limit),
+        offset: Number(offset),
+        order: [["id", "DESC"]],
+      });
+
+      if (results.count === 0) {
+        console.log("⚠️ Không tìm thấy, thử fuzzy search...");
+
+        if (words.length >= 2) {
+          const wordConditions = words.map(word => ({
+            name_no_tone: { [Op.like]: `%${word}%` }
+          }));
+
+          results = await product.findAndCountAll({
+            include: [
+              {
+                model: product_variants,
+                include: [
+                  { model: product_image }
+                ]
+              }
+            ],
+            where: {
+              [Op.or]: wordConditions,
+              is_deleted: false,
+            },
+            limit: Number(limit),
+            offset: Number(offset),
+            order: [["id", "DESC"]],
+          });
+        }
+      }
+
+      return results;
+
+    } catch (error) {
+      console.log("Search error:", error);
+      throw error;
+    }
+  }
+
+
+  async relatedProduct(categoryId, productId) {
+    try {
+      const result = await product.findAll({
+        where: {
+          id: { [Op.ne]: productId },
+          is_deleted: false,
+        },
+        include: [
+          {
+            model: category,
+            where: { id: categoryId },
+            through: { attributes: [] }
+          },
+          {
+            model: product_variants,
+            include: [
+              { model: product_image }
+            ]
+          }
+        ],
+        order: sequelize.literal("RAND()"),
+        limit: 10,
+      })
+
+      return result;
+    } catch (error) {
+      return null;
+    }
+  }
+
+
 }
 
 module.exports = new ProductService();

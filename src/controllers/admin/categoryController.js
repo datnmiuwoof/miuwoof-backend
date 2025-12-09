@@ -2,7 +2,6 @@ const categoryService = require("../../services/categoryService");
 const slugify = require("slugify");
 
 class CategoryController {
-    // Lấy tất cả category
     async getAll(req, res) {
         try {
             const categories = await categoryService.getAllCategoryAdmin();
@@ -17,11 +16,6 @@ class CategoryController {
             });
         }
     }
-
-    //lấy cate parent 
-    // async parent(req, res){
-
-    // }
 
     //lấy mố sản phẩm show giao diện
     async getOne(req, res) {
@@ -38,9 +32,8 @@ class CategoryController {
     // Tạo mới category
     async create(req, res) {
         try {
-            const { name, description, is_active } = req.body;
+            const { name, description, is_active, parent_id } = req.body;
 
-            // Tự động tạo slug nếu chưa có
             const slug = slugify(name, { lower: true, strict: true });
 
             const createCategory = await categoryService.createCategory({
@@ -48,6 +41,7 @@ class CategoryController {
                 slug,
                 description,
                 is_active,
+                parent_id,
             });
 
             res.status(201).json({
@@ -112,6 +106,78 @@ class CategoryController {
             });
         }
     }
+
+    //xóa mềm category
+    async softDeleted(req, res) {
+        try {
+            const { id } = req.params;
+
+            await categoryService.softDelete(id);
+
+            return res.status(200).json({
+                message: "Xóa danh mục thành công!"
+            });
+
+        } catch (error) {
+            return res.status(400).json({
+                message: error.message
+            });
+        }
+    }
+
+    //lấy danh mục bị xóa
+    async getSoftDeleted(req, res) {
+        try {
+            const result = await categoryService.getSoftDeleted();
+
+            if (!result.success) {
+                return res.status(500).json({
+                    success: false,
+                    message: result.message,
+                    error: result.error
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                data: result.data
+            });
+
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                message: "Server error",
+                error: error.message
+            });
+        }
+    }
+
+    //khôi phục xóa mềm
+    async restoreCategory(req, res) {
+        try {
+            const { id } = req.params;
+            if (!id) res.status(400).json({ message: "không tìm thấy id" });
+
+            const result = await categoryService.restoreCaegory(id);
+
+            if (!result.success) {
+                return res.status(500).json({
+                    success: false,
+                    message: result.message,
+                    error: result.error
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+            });
+        } catch (error) {
+            res.status(400).json(error)
+        }
+    };
+
+
+
 }
 
 module.exports = new CategoryController();
