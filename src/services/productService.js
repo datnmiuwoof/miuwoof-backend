@@ -12,16 +12,18 @@ const {
 const Category = require("../models/categoryModel");
 // const { create } = require("../controllers/admin/categoryController");
 const slug = require("slugify");
-const { Op, Sequelize } = require("sequelize");
+const { Op, fn, col, literal } = require("sequelize");
 const uploadService = require("../services/uploadService");
 const fs = require("fs");
 
-function removeVietnameseTones(str) {
+function removeTone(str = "") {
   return str
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // remove accents
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/đ/g, "d")
-    .replace(/Đ/g, "D");
+    .replace(/Đ/g, "D")
+    .toLowerCase()
+    .trim();
 }
 
 
@@ -83,6 +85,7 @@ class ProductService {
       const newproduct = await product.create(
         {
           name: productData.name,
+          name_no_tone: removeTone(productData.name),
           slug: slug(productData.name, { lower: true }),
           description: productData.description,
         },
@@ -319,6 +322,7 @@ class ProductService {
 
       if (productData.name && productData.name.trim() !== "")
         productUpdate.name = productData.name;
+      productUpdate.name_no_tone = removeTone(productData.name);
 
       if (productData.description && productData.description.trim() !== "")
         productUpdate.description = productData.description;
@@ -334,6 +338,7 @@ class ProductService {
       await productToUpdate.update(
         {
           name: productUpdate.name ?? productToUpdate.name,
+          name_no_tone: productUpdate.name ?? removeTone(productData.name),
           slug: slugValue,
           description: productUpdate.description ?? productToUpdate.description,
         },
@@ -578,106 +583,86 @@ class ProductService {
     await productToDelete.destroy();
   }
 
-  // async searchProducts(keyword) {
-  //   if (!keyword || keyword.trim() === "") return [];
-
-  //   const key = removeVietnameseTones(keyword).toLowerCase();
-
-  //   // Lấy hết sản phẩm (vì MySQL không hỗ trợ tìm không dấu ngon)
-  //   const products = await product.findAll({
-  //     attributes: ["id", "name", "slug", "views", "is_hot"],
-  //     where: {
-  //       is_deleted: false
-  //     },
-  //     include: [
-  //       {
-  //         model: category,
-  //         attributes: ["id", "name", "slug"],
-  //         through: { attributes: [] }
-  //       },
-  //       {
-  //         model: product_variants,
-  //         where: { is_deleted: false },
-  //         required: false,
-  //         attributes: ["id", "price"],
-  //         include: [
-  //           {
-  //             model: product_image,
-  //             attributes: ["image"],
-  //             limit: 1
-  //           }
-  //         ]
-  //       }
-  //     ],
-  //     order: [["created_at", "DESC"]]
-  //   });
-
-  //   return products.filter(p => {
-  //     const nameNoTone = removeVietnameseTones(p.name || "").toLowerCase();
-  //     return nameNoTone.includes(key);
-  //   });
-  // }
-
   // Phiên bản tối ưu nhất = kết hợp cả 2 cách
-
-  async searchProducts(keyword) {
-    if (!keyword?.trim()) return [];
-
-    const search = this.#removeTone(keyword).toLowerCase();
-
+  async searchProducts(search, limit, offset) {
     try {
-      const products = await product.findAll({
-        where: {
-          is_deleted: false
-        },
-        attributes: ['id', 'name', 'slug', 'views', 'is_hot'],
+      const keyword = search?.trim() || "";
+
+      if (!keyword) {
+        return await product.findAndCountAll({
+          where: { is_deleted: false },
+          include: [
+            {
+              model: product_variants,
+              include: [
+                { model: product_image }
+              ]
+            }
+          ],
+          limit: Number(limit),
+          offset: Number(offset),
+          order: [["id", "DESC"]],
+        });
+      }
+
+      // ✔ SỬA LỖI 1: đưa keywordNoTone lên trước words
+      const keywordNoTone = removeTone(keyword).toLowerCase();
+      const words = keywordNoTone.split(" ").filter(w => w.length > 0);
+
+      let results = await product.findAndCountAll({
         include: [
           {
-            model: category,
-            attributes: ['id', 'name', 'slug'],
-            through: { attributes: [] }
-          },
-          {
             model: product_variants,
-            where: { is_deleted: false },
-            required: false,
-            attributes: ['id', 'price'],
-            include: [{
-              model: product_image,
-              attributes: ['image'],
-              limit: 1
-            }]
+            include: [
+              { model: product_image }
+            ]
           }
         ],
-        order: [['id', 'DESC']],
-        limit: 60
+        where: {
+          is_deleted: false,
+
+          // ✔ SỬA LỖI 2: search chính phải theo nguyên cụm
+          name_no_tone: { [Op.like]: `%${keywordNoTone}%` }
+        },
+        limit: Number(limit),
+        offset: Number(offset),
+        order: [["id", "DESC"]],
       });
 
-      // Lọc bằng JS – đơn giản, không lỗi, chạy ngon với MariaDB
-      const filtered = products
-        .map(p => p.get({ plain: true }))
-        .filter(p => this.#removeTone(p.name || "").toLowerCase().includes(search));
+      if (results.count === 0) {
+        console.log("⚠️ Không tìm thấy, thử fuzzy search...");
 
-      return filtered.sort((a, b) => {
-        const nameA = this.#removeTone(a.name).toLowerCase();
-        const nameB = this.#removeTone(b.name).toLowerCase();
-        if (nameA.startsWith(search) && !nameB.startsWith(search)) return -1;
-        if (!nameA.startsWith(search) && nameB.startsWith(search)) return 1;
-        return 0;
-      });
+        if (words.length >= 2) {
+          const wordConditions = words.map(word => ({
+            name_no_tone: { [Op.like]: `%${word}%` }
+          }));
+
+          results = await product.findAndCountAll({
+            include: [
+              {
+                model: product_variants,
+                include: [
+                  { model: product_image }
+                ]
+              }
+            ],
+            where: {
+              [Op.or]: wordConditions,
+              is_deleted: false,
+            },
+            limit: Number(limit),
+            offset: Number(offset),
+            order: [["id", "DESC"]],
+          });
+        }
+      }
+
+      return results;
 
     } catch (error) {
-      console.error("Search error:", error.message);
-      return []; // không bao giờ crash nữa
+      console.log("Search error:", error);
+      throw error;
     }
-  }
-
-  #removeTone(str = "") {
-    return str
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/đ/g, 'd')
-      .replace(/Đ/g, 'D');
   }
 
 
@@ -685,7 +670,8 @@ class ProductService {
     try {
       const result = await product.findAll({
         where: {
-          id: { [Op.ne]: productId }
+          id: { [Op.ne]: productId },
+          is_deleted: false,
         },
         include: [
           {

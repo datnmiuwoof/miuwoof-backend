@@ -20,8 +20,10 @@ class ProductController {
     async getAllProducts(req, res) {
 
         try {
-            const { search } = req.query;
-            let products = await productService.searchProducts(search);
+            const { search, page } = req.query;
+            const limit = 8;
+            const offset = (page - 1) * limit;
+            const products = await productService.searchProducts(search, limit, offset);
 
             res.status(200).json(products);
         } catch (error) {
@@ -53,7 +55,7 @@ class ProductController {
     }
 
 
-    // ✅ Lấy chi tiết sản phẩm
+    // Lấy chi tiết sản phẩm
     async getProductBySlug(req, res) {
         try {
             const { slug } = req.params;
