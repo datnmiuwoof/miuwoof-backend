@@ -14,6 +14,8 @@ const cartRouter = require("./router/client/cartrouter");
 const paymentRouter = require("./router/client/paymentrouter");
 const addressRouter = require("./router/client/addressrouter");
 const statusRouter = require("./router/client/statusrouter");
+const favoriteRouter = require("./router/client/favoriteRouter");
+
 const orderAdmin = require("./router/admin/orderAdminrouter");
 
 const postAdminRouter = require("./router/admin/postAdminRouter");
@@ -54,7 +56,7 @@ app.use("/api/cart", cartRouter);
 app.use("/api/order", paymentRouter);
 app.use("/api/address", addressRouter);
 app.use("/checkout/success", statusRouter);
-
+app.use("/api/favorites", favoriteRouter);
 app.use("/api/posts", postAdminRouter);
 
 app.use("/AdminDashboard", AdminDashboard);
