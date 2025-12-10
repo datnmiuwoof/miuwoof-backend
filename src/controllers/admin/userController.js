@@ -70,29 +70,44 @@ class userController {
         }
     }
 
-    async blockUser(req, res) {
+    async toggleLock(req, res) {
         try {
             const { id } = req.params;
+            const updatedUser = await userService.toggleUserLock(id);
 
-            const result = await userService.userBlock(id);
-
-            if (!result) {
-                return res.status(400).json({ message: "không khóa được" })
-            }
-
-            return res.status(200).json({ message: "khóa thành công" })
+            return res.status(200).json({
+                message: updatedUser.is_locked ? "Đã khóa tài khoản thành công" : "Đã mở khóa tài khoản thành công",
+                data: {
+                    id: updatedUser.id,
+                    is_locked: updatedUser.is_locked,
+                    locked_until: updatedUser.locked_until
+                }
+            });
         } catch (error) {
-            return res.status(400).json({ message: "không khóa được" })
+            return res.status(500).json({ message: error.message || "Lỗi hệ thống" });
         }
     }
 
-    // async isLocket(req, res){
-    //     try {
-    //         const result = await userService.isLocket();
-    //     } catch (error) {
-    //         return res.status(400).json({message: error})
-    //     }
-    // }
+    async changeRole(req, res) {
+        try {
+            const { id } = req.params;
+            const { role } = req.body; // 'admin' hoặc 'user'
+
+            if (!role) return res.status(400).json({ message: "Vui lòng gửi role mới (admin/user)" });
+
+            const updatedUser = await userService.changeUserRole(id, role);
+
+            return res.status(200).json({
+                message: "Cập nhật quyền thành công",
+                data: {
+                    id: updatedUser.id,
+                    role: updatedUser.role
+                }
+            });
+        } catch (error) {
+            return res.status(500).json({ message: error.message || "Lỗi hệ thống" });
+        }
+    }
 
 }
 

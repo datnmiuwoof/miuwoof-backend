@@ -15,10 +15,6 @@ class userService {
         try {
             const offset = (page - 1) * limit;
 
-            let where = {
-                is_locked: false
-            };
-
             if (status && status !== "all") {
                 where.role = status;
             }
@@ -26,7 +22,7 @@ class userService {
                 where,
                 limit,
                 offset,
-                attributes: ["id", "name", "role", "email", "created_at", "phone_number"],
+                attributes: ["id", "name", "role", "email", "created_at", "phone_number", "is_locked", "locked_until", "login_fail_count"],
                 include: [
                     {
                         model: address,
@@ -151,35 +147,73 @@ class userService {
     // }
 
     //đăng nhập user
-    async loginUser(loginUser) {
+    
+    async loginUser(loginData) {
         try {
-            const checkUser = await user.findOne({ where: { email: loginUser.email } });
+            const checkUser = await user.findOne({ where: { email: loginData.email } });
 
             if (!checkUser) {
-                throw new Error("không có người dùng như đã nhập");
+                throw new Error("Email không tồn tại trong hệ thống");
             }
 
-            const isMatch = await bcrypt.compare(loginUser.password, checkUser.password);
+
+            if (checkUser.is_locked) {
+                if (!checkUser.locked_until || new Date() < new Date(checkUser.locked_until)) {
+                    const unlockDate = checkUser.locked_until 
+                        ? new Date(checkUser.locked_until).toLocaleString('vi-VN') 
+                        : "Vô thời hạn (Vui lòng liên hệ Admin)";
+                    throw new Error(`Tài khoản đang bị khóa. Mở lại vào: ${unlockDate}`);
+                } 
+                
+                // Nếu đã hết hạn khóa -> Tự động mở
+                checkUser.is_locked = false;
+                checkUser.login_fail_count = 0;
+                checkUser.locked_until = null;
+                await checkUser.save();
+            }
+
+            const isMatch = await bcrypt.compare(loginData.password, checkUser.password);
+
             if (!isMatch) {
-                throw new Error("mật khẩu không khớp");
+                // Tăng số lần sai
+                checkUser.login_fail_count = (checkUser.login_fail_count || 0) + 1;
+                
+                // Nếu sai quá 5 lần -> Khóa 7 ngày
+                if (checkUser.login_fail_count >= 5) {
+                    checkUser.is_locked = true;
+                    checkUser.locked_until = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+                    await checkUser.save();
+                    throw new Error("Bạn nhập sai quá 5 lần. Tài khoản bị khóa 7 ngày.");
+                }
+
+                await checkUser.save();
+                const remaining = 5 - checkUser.login_fail_count;
+                throw new Error(`Mật khẩu không đúng. Bạn còn ${remaining} lần thử trước khi bị khóa.`);
+            }
+
+             //Đăng nhập thành công -> Reset bộ đếm
+            if (checkUser.login_fail_count > 0 || checkUser.is_locked) {
+                checkUser.login_fail_count = 0;
+                checkUser.is_locked = false;
+                checkUser.locked_until = null;
+                await checkUser.save();
             }
 
             const token = jwt.sign(
-                { id: checkUser.id, name: checkUser.name, email: checkUser.email, role: checkUser.role, },
+                { id: checkUser.id, name: checkUser.name, email: checkUser.email, role: checkUser.role },
                 process.env.JWT_SECRET || "secret_key",
                 { expiresIn: "1d" },
             );
 
-            const safer = {
+            return {
+                id: checkUser.id,
                 name: checkUser.name,
                 email: checkUser.email,
                 role: checkUser.role,
                 token,
-            }
-            return safer;
+            };
 
         } catch (error) {
-            console.log("lỗi rồi: ", error);
             throw error;
         }
     }
@@ -268,26 +302,50 @@ class userService {
         }
     }
 
-    async userBlock(userId) {
+    async toggleUserLock(userId) {
         try {
-            const [updated] = await user.update(
-                { is_locked: true },
-                { where: { id: userId } }
-            );
+            const userFound = await user.findByPk(userId);
+            if (!userFound) throw new Error("User not found");
 
-            return updated;
+            // Đảo ngược trạng thái khóa
+            const newStatus = !userFound.is_locked;
+            
+            userFound.is_locked = newStatus;
+            
+            // Nếu mở khóa -> reset hết
+            if (!newStatus) {
+                userFound.login_fail_count = 0;
+                userFound.locked_until = null;
+            } else {
+                // Nếu Admin khóa tay -> Khóa vĩnh viễn (locked_until = null)
+                userFound.locked_until = null; 
+            }
+
+            await userFound.save();
+            return userFound;
         } catch (error) {
-            return null;
+            throw error;
         }
     }
 
-    // async isLocket(){
-    //     try {
+    async changeUserRole(userId, newRole) {
+        try {
+            // Chỉ cho phép role là 'user' hoặc 'admin'
+            if (!['user', 'admin'].includes(newRole)) {
+                throw new Error("Role không hợp lệ (chỉ chấp nhận 'user' hoặc 'admin')");
+            }
 
-    //     } catch (error) {
-    //         return null;
-    //     }
-    // }
+            const userFound = await user.findByPk(userId);
+            if (!userFound) throw new Error("User not found");
+
+            userFound.role = newRole;
+            await userFound.save();
+            
+            return userFound;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 module.exports = new userService();
