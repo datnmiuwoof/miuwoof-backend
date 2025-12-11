@@ -101,6 +101,28 @@ class EmailService {
     });
   }
 
+  async sendForgotPasswordOtp(userEmail, otp) {
+    const subject = "Yêu cầu đặt lại mật khẩu - MiuWoof";
+    const html = `
+     <div style="font-family: Arial, sans-serif; padding: 20px;">
+        <h2>Đặt lại mật khẩu</h2>
+        <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản liên kết với email này.</p>
+        <p>Mã xác nhận (OTP) của bạn là:</p>
+        <h1 style="color: #d35400; letter-spacing: 5px;">${otp}</h1>
+        <p>Mã này có hiệu lực trong 5 phút. Tuyệt đối không chia sẻ mã này cho ai.</p>
+        <p>Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>
+        <br>
+        <p>Trân trọng,<br>MiuWoof Team</p>
+     </div>
+     `;
+
+    await this.sendMail({
+      to: userEmail,
+      subject: subject,
+      html: html,
+    })
+  }
+
   // Sau này, bạn chỉ cần thêm các hàm mới vào đây
   // async sendPasswordReset(userEmail, resetLink) { ... }
   // async sendOrderConfirmation(userEmail, orderDetails) { ... }

@@ -1,12 +1,9 @@
 const OTP_STORE = {};
-const bcrypt = require("bcrypt");
 
-async function saveOTP(email, otp, name, password) {
-    const hashedPassword = await bcrypt.hash(password, 10);
+async function saveOTP(email, otp, data = {}) {
     OTP_STORE[email] = {
         otp: String(otp),
-        name,
-        password: hashedPassword,
+        data: data, 
         expire: Date.now() + 5 * 60 * 1000,
         used: false,
         attempts: 0,
@@ -25,7 +22,7 @@ function verifyOTP(email, otp) {
     }
 
     record.used = true;
-    return { ok: true, data: { name: record.name, password: record.password } };
+   return { ok: true, data: record.data };
 }
 
-module.exports = { saveOTP, verifyOTP };
+module.exports = { saveOTP, verifyOTP};

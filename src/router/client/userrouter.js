@@ -15,6 +15,7 @@ router.post("/logout", (req, res) => {
     res.status(200).json({ message: "Logged out" });
 })
 
-
+router.post("/forgot-password", userController.forgotPassword);
+router.post("/reset-password", userController.resetPassword);
 
 module.exports = router;

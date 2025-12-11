@@ -7,7 +7,6 @@ const emailService = require('../services/emailService');
 const { saveOTP, verifyOTP } = require('../services/otpService');
 const { Op, where } = require("sequelize");
 
-
 class userService {
 
     //lấy danh sách user
@@ -79,7 +78,9 @@ class userService {
             }
 
             const otp = gerenataOTP();
-            saveOTP(addUser.email, otp, addUser.name, addUser.password);
+
+            const hashedPassword = await bcrypt.hash(addUser.password, 10);
+            
             await emailService.sendRegisterOtp(addUser.email, otp);
             return { message: "đã gửi mã otp thành công" };
         } catch (error) {
@@ -95,18 +96,16 @@ class userService {
 
             const { name, password } = checkOTP.data;
 
-            const hashedPassword = await bcrypt.hash(password, 10);
-
-            await user.create({
+            const newUser = await user.create({
                 name: name,
                 email: email,
-                password: hashedPassword,
+                password: password, 
                 is_locked: 0,
                 role: 'user',
-            })
+            });
             return { message: "Đăng ký thành công", user: { ...newUser.get(), password: undefined } };
         } catch (error) {
-            return { message: error };
+            return { message: error.message };
         }
     }
 
@@ -288,6 +287,37 @@ class userService {
     //         return null;
     //     }
     // }
+
+    async requestForgotPassword(email) {
+        const userFound = await user.findOne({ where: { email } });
+        if (!userFound) throw new Error("Email không tồn tại");
+
+        const otp = gerenataOTP();
+        
+        await saveOTP(email, otp, { type: 'reset_password' }); 
+
+        await emailService.sendForgotPasswordOtp(email, otp);
+        return { message: "Mã OTP đã được gửi" };
+    }
+
+    async resetPassword(email, otp, newPassword) {
+        const checkOTP = verifyOTP(email, otp);
+        if (!checkOTP.ok) throw new Error(checkOTP.message);
+
+        const userFound = await user.findOne({ where: { email } });
+        if (!userFound) throw new Error("User không tồn tại");
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        userFound.password = hashedPassword;
+        
+        userFound.is_locked = false;
+        userFound.login_fail_count = 0;
+        userFound.locked_until = null;
+        
+        await userFound.save();
+
+        return { message: "Đổi mật khẩu thành công" };
+    }
 }
 
 module.exports = new userService();
