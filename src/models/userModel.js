@@ -14,9 +14,8 @@ const User = sequelize.define('User', {
     email: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
         validate: {
-            isEmail: true,     // Kiểm tra đúng định dạng email
+            isEmail: true,
         },
     },
     password: {
@@ -36,6 +35,10 @@ const User = sequelize.define('User', {
         allowNull: false,
     },
     is_locked: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+    },
+    is_destroyed: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
     },

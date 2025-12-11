@@ -20,6 +20,7 @@ const productDiscount = require("./productDiscountModel");
 const product_category = require("./productCategoryModel");
 const cart = require("./cartModel");
 const cart_item = require("./cartItemModel");
+const post_images = require("./post_images");
 
 // ======================== USER ========================
 user.hasMany(address, { foreignKey: "user_id" });
@@ -99,11 +100,14 @@ order_detail.belongsTo(order, { foreignKey: "order_id" });
 order_detail.belongsTo(product_variants, { foreignKey: "product_variant_id" });
 product_variants.hasMany(order_detail, { foreignKey: "product_variant_id" });
 
+
+
 // ======================== POST ========================
 post_model.belongsTo(post_category, { foreignKey: "post_category_id" });
 post_category.hasMany(post_model, { foreignKey: "post_category_id" });
 
-
+// post_images.hasMany(post_model, { foreignKey: "post_id" })
+// post_model.hasMany(post_images, { foreignKey: "post_id" })
 // ======================== CART ========================
 
 cart.hasMany(cart_item, {

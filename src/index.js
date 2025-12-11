@@ -29,7 +29,6 @@ app.use(cookieParser());
 
 app.use(express.urlencoded({ extended: true }));
 
-//khai bao cors
 app.use(
   cors({
     origin: "http://localhost:3005",

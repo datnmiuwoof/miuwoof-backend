@@ -15,13 +15,17 @@ const Post = sequelize.define('Post', {
         type: DataTypes.STRING(255),
         allowNull: true,
     },
+    thumbnail: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+    },
     content: {
         type: DataTypes.TEXT,
         allowNull: false,
     },
-    image: {
-        type: DataTypes.STRING(255),
-        allowNull: true,
+    excerpt: {
+        type: DataTypes.TEXT,
+        allowNull: false,
     },
     post_category_id: {
         type: DataTypes.INTEGER.UNSIGNED,
@@ -39,10 +43,10 @@ const Post = sequelize.define('Post', {
             key: 'id',
         }
     },
-    is_active: {
-        type: DataTypes.BOOLEAN,
+    status: {
+        type: DataTypes.ENUM('draft', 'published'),
         allowNull: false,
-        defaultValue: 1,
+        defaultValue: 'draft',
     },
 }, {
     tableName: 'post',

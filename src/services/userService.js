@@ -281,13 +281,57 @@ class userService {
         }
     }
 
-    // async isLocket(){
-    //     try {
+    async isLocked(offset = 0, limit = 20, status) {
+        try {
+            let where = { is_locked: true };
 
-    //     } catch (error) {
-    //         return null;
-    //     }
-    // }
+            switch (status) {
+                case "temporary":
+                    where.locked_until = { [Op.ne]: null };
+                    break;
+
+                case "forever":
+                    where.is_destroyed = true;
+                    break;
+
+                case "all":
+                default:
+                    break;
+            }
+
+            const result = await user.findAndCountAll({
+                where,
+                include: [
+                    {
+                        model: address
+                    }
+                ],
+                offset,
+                limit
+            });
+
+            return result;
+
+        } catch (error) {
+            console.error(error);
+            return null;
+        }
+    }
+
+    //mở khóa tài khoản
+    async unbanUser(userId) {
+        try {
+            const result = await user.update(
+                { is_locked: false, is_destroyed: false },
+                { where: { id: userId } }
+            );
+
+            return result;
+        } catch (error) {
+            return null
+        }
+    }
+
 }
 
 module.exports = new userService();

@@ -3,9 +3,10 @@ const router = express.Router();
 
 const userController = require("../../controllers/admin/userController");
 
-// router.get("is_locket", userController.isLocket)
+router.get("/is_locked", userController.isLocked);
 router.get("/status/:id", userController.getStatusUser);
-router.put("/block/:id", userController.blockUser)
+router.put("/block/:id", userController.blockUser);
+router.put("/:id/unban", userController.unbanUser);
 router.get("/:id", userController.getDetailUser);
 router.get("/", userController.getAllUser);
 

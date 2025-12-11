@@ -5,6 +5,7 @@ class PostController {
   // GET ALL
   async getAll(req, res) {
     try {
+      // const { page, status } = req.query;
       const posts = await postService.getAllPosts();
       res.status(200).json({
         message: "Lấy danh sách bài viết thành công",
