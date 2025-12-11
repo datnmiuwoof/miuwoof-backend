@@ -53,12 +53,13 @@ class EmailService {
         <br>
         <p>Trân trọng,<br>MiuWoof Team</p>
      `;
-
+// console.log(`Đã gửi OTP đăng ký tới ${userEmail}: ${otp}`);
     await this.sendMail({
       to: userEmail,
       subject: subject,
       html: html,
     })
+    
   }
 
   // Gửi email xác nhận liên hệ (ví dụ đầu tiên)
