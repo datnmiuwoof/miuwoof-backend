@@ -4,7 +4,7 @@ const router = express.Router();
 const userController = require("../../controllers/admin/userController");
 const authmiddlewares = require("../../middlewares/middlewares");
 
-// router.get("is_locket", userController.isLocket)
+router.get("/is_locked", userController.isLocked);
 router.get("/status/:id", userController.getStatusUser);
 router.get("/:id", userController.getDetailUser);
 router.get("/", userController.getAllUser);

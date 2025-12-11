@@ -4,7 +4,6 @@ const Joi = require("joi");
 class userController {
     //xem all dữ iệu user
     async getAllUser(req, res) {
-        console.log(req.query.status)
         try {
             const { page, status } = req.query;
             const limit = 10;
