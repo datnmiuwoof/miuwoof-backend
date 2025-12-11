@@ -17,5 +17,5 @@ router.post("/logout", (req, res) => {
 
 router.post("/forgot-password", userController.forgotPassword);
 router.post("/reset-password", userController.resetPassword);
-
+router.post("/change-password", authmiddlewares(), userController.changePassword);
 module.exports = router;

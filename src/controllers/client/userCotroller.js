@@ -116,37 +116,62 @@ class userController {
   }
 
   async forgotPassword(req, res) {
-        try {
-            const { email } = req.body;
-            if (!email) return res.status(400).json({ message: "Vui lòng nhập email" });
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ message: "Vui lòng nhập email" });
 
-            const result = await userService.requestForgotPassword(email);
-            return res.status(200).json(result);
-        } catch (error) {
-            return res.status(400).json({ message: error.message });
-        }
+        const result = await userService.requestForgotPassword(email);
+        return res.status(200).json(result);
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
     }
+  }
 
   async resetPassword(req, res) {
-        try {
-            const { email, otp, newPassword } = req.body;
-          
-            const schema = Joi.object({
-                email: Joi.string().email().required(),
-                otp: Joi.string().required(),
-                newPassword: Joi.string().min(6).required()
-            });
-            
-            const { error } = schema.validate(req.body);
-            if (error) return res.status(400).json({ message: error.details[0].message });
+    try {
+        const { email, otp, newPassword } = req.body;
+      
+        const schema = Joi.object({
+            email: Joi.string().email().required(),
+            otp: Joi.string().required(),
+            newPassword: Joi.string().min(6).required()
+        });
+        
+        const { error } = schema.validate(req.body);
+        if (error) return res.status(400).json({ message: error.details[0].message });
 
-            const result = await userService.resetPassword(email, otp, newPassword);
-            return res.status(200).json(result);
+        const result = await userService.resetPassword(email, otp, newPassword);
+        return res.status(200).json(result);
 
-        } catch (error) {
-            return res.status(400).json({ message: error.message });
-        }
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
     }
+  }
+
+  async changePassword(req, res) {
+    try {
+        const userId = req.user.id;
+        const { oldPassword, newPassword } = req.body;
+
+      if (!oldPassword || !newPassword) {
+      return res.status(400).json({ message: "Vui lòng nhập đầy đủ Mật khẩu cũ và Mật khẩu mới" });
+      }
+
+      if (newPassword.length < 6) {
+          return res.status(400).json({ message: "Mật khẩu mới phải có ít nhất 6 ký tự" });
+      }
+    
+      if (oldPassword === newPassword) {
+          return res.status(400).json({ message: "Mật khẩu mới không được trùng với mật khẩu cũ" });
+      }
+      
+      const result = await userService.changePassword(userId, oldPassword, newPassword);
+      return res.status(200).json(result);
+
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+  }
 }
 
 module.exports = new userController();

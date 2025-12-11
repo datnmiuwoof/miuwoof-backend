@@ -318,6 +318,27 @@ class userService {
 
         return { message: "Đổi mật khẩu thành công" };
     }
+
+    async changePassword(userId, oldPassword, newPassword) {
+        try {
+            const userFound = await user.findByPk(userId);
+            if (!userFound) throw new Error("Người dùng không tồn tại");
+
+            const isMatch = await bcrypt.compare(oldPassword, userFound.password);
+            if (!isMatch) {
+                throw new Error("Mật khẩu cũ không chính xác");
+            }
+
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+            userFound.password = hashedPassword;
+            await userFound.save();
+
+            return { message: "Đổi mật khẩu thành công" };
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 module.exports = new userService();
