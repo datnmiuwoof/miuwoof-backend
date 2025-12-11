@@ -15,11 +15,8 @@ const paymentRouter = require("./router/client/paymentrouter");
 const addressRouter = require("./router/client/addressrouter");
 const statusRouter = require("./router/client/statusrouter");
 const favoriteRouter = require("./router/client/favoriteRouter");
-
 const orderAdmin = require("./router/admin/orderAdminrouter");
-
 const postAdminRouter = require("./router/admin/postAdminRouter");
-
 const AdminDashboard = require("./router/admin/AdminDashboard");
 
 

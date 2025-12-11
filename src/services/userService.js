@@ -159,10 +159,40 @@ class userService {
                 throw new Error("không có người dùng như đã nhập");
             }
 
-            const isMatch = await bcrypt.compare(loginUser.password, checkUser.password);
-            if (!isMatch) {
-                throw new Error("mật khẩu không khớp");
+            if (checkUser.locked_until && checkUser.locked_until > new Date()) {
+                throw new Error("Tài khoản đang bị khóa tạm thời. Vui lòng thử lại sau.");
             }
+
+            if (checkUser.locked_until && checkUser.locked_until <= new Date()) {
+                await checkUser.update({
+                    login_fail_count: 0,
+                    locked_until: null
+                });
+            }
+
+            const isMatch = await bcrypt.compare(loginUser.password, checkUser.password);
+
+            if (!isMatch) {
+                const attempts = checkUser.login_fail_count + 1;
+
+                // Nếu sai >= 5 lần → khóa 5 phút
+                if (attempts >= 5) {
+                    const lockTime = new Date(Date.now() + 5 * 60 * 1000); // 5 phút
+                    await checkUser.update({
+                        login_fail_count: attempts,
+                        locked_until: lockTime
+                    });
+
+                    throw new Error("Sai mật khẩu quá nhiều. Tài khoản bị khóa 5 phút.");
+                }
+
+                await checkUser.update({ login_fail_count: attempts });
+
+                throw new Error(`Sai mật khẩu. Bạn còn ${5 - attempts} lần thử.`);
+            }
+
+
+
 
             const token = jwt.sign(
                 { id: checkUser.id, name: checkUser.name, email: checkUser.email, role: checkUser.role, },
