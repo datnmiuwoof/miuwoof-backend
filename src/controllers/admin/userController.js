@@ -69,57 +69,42 @@ class userController {
         }
     }
 
-    async blockUser(req, res) {
+    async toggleLock(req, res) {
         try {
             const { id } = req.params;
+            const updatedUser = await userService.toggleUserLock(id);
 
-            const result = await userService.userBlock(id);
-
-            if (!result) {
-                return res.status(400).json({ message: "không khóa được" })
-            }
-
-            return res.status(200).json({ message: "khóa thành công" })
+            return res.status(200).json({
+                message: updatedUser.is_locked ? "Đã khóa tài khoản thành công" : "Đã mở khóa tài khoản thành công",
+                data: {
+                    id: updatedUser.id,
+                    is_locked: updatedUser.is_locked,
+                    locked_until: updatedUser.locked_until
+                }
+            });
         } catch (error) {
-            return res.status(400).json({ message: "không khóa được" })
+            return res.status(500).json({ message: error.message || "Lỗi hệ thống" });
         }
     }
 
-    async isLocked(req, res) {
-        try {
-            const { page, status } = req.query;
-            const limit = 10;
-            const offset = (page - 1) * limit;
-            const result = await userService.isLocked(offset, limit, status);
-
-            if (!result) return res.status(400).json({ message: "lỗi không lấy được dữ liệu" });
-
-            console.log(result)
-
-            res.status(200).json({
-                data: result.rows,
-                total: result.count,
-                page: Number(page),
-                totalPages: Math.ceil(result.count / limit),
-            })
-        } catch (error) {
-            return res.status(400).json({ message: error })
-        }
-    }
-
-
-    //mở khóa tài khoản
-    async unbanUser(req, res) {
+    async changeRole(req, res) {
         try {
             const { id } = req.params;
+            const { role } = req.body; // 'admin' hoặc 'user'
 
-            const result = await userService.unbanUser(id);
+            if (!role) return res.status(400).json({ message: "Vui lòng gửi role mới (admin/user)" });
 
-            if (!result) return res.status(400).json({ message: "không mở khóa được" });
+            const updatedUser = await userService.changeUserRole(id, role);
 
-            res.status(200).json({ message: "mở khóa thành công" })
+            return res.status(200).json({
+                message: "Cập nhật quyền thành công",
+                data: {
+                    id: updatedUser.id,
+                    role: updatedUser.role
+                }
+            });
         } catch (error) {
-            return res.status(400).json({ message: error });
+            return res.status(500).json({ message: error.message || "Lỗi hệ thống" });
         }
     }
 
