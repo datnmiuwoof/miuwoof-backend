@@ -111,7 +111,6 @@ class orderService {
                             transaction: t
                         })
 
-                        console.log("remaining", remaining)
 
                         if (remaining === 0) {
                             await cartModel.destroy({

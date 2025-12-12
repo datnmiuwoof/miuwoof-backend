@@ -5,6 +5,8 @@ const { cart, cart_item: cartItem, product_variants, product_image } = db; // <-
 const { v4: uuidv4 } = require("uuid"); // npm install uuid nếu chưa có
 
 class CartService {
+
+
     async getCart(userId) {
         let userCart = await cart.findOne({
             where: { user_id: userId },

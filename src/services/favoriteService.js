@@ -20,7 +20,7 @@ class FavoriteService {
                     message: "Đã bỏ sản phẩm khỏi danh sách yêu thích"
                 };
             } else {
-                
+
                 await favorite.create({
                     user_id: userId,
                     product_id: productId
@@ -42,16 +42,16 @@ class FavoriteService {
                 include: [
                     {
                         model: product,
-                        attributes: ['id', 'name', 'slug', 'is_hot', 'is_active', 'brand_id'], 
+                        attributes: ['id', 'name', 'slug', 'is_hot', 'is_active', 'brand_id'],
                         include: [
                             {
                                 model: product_variants,
                                 limit: 1,
-                                attributes: ['id', 'price', 'import_price'], 
-                                include: [{ 
-                                    model: product_image, 
+                                attributes: ['id', 'price', 'import_price'],
+                                include: [{
+                                    model: product_image,
                                     limit: 1,
-                                    attributes: ['image'] 
+                                    attributes: ['image']
                                 }]
                             }
                         ]

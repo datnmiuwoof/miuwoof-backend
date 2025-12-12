@@ -362,6 +362,53 @@ class userService {
         }
     }
 
+    async changePassword(userId, currentPassword, newPassword) {
+        const result = await user.findByPk(userId, {
+            attributes: ["id", "name", "email", "password"]
+        });
+
+        if (!result) {
+            throw new Error("User không tồn tại");
+        }
+
+        // Kiểm tra mật khẩu cũ
+        const isMatch = await bcrypt.compare(currentPassword, result.password);
+        if (!isMatch) {
+            throw new Error("Mật khẩu cũ không đúng");
+        }
+
+        // Hash mật khẩu mới
+        const hashed = await bcrypt.hash(newPassword, 10);
+
+        // Lưu lại
+        result.password = hashed;
+        await result.save();
+
+        return { message: "Đổi mật khẩu thành công" };
+    }
+
+    async resetPassword(email, newPassword) {
+        try {
+            const checkUser = await user.findOne({
+                where: { email }
+            })
+
+            if (!checkUser) {
+                return null
+            }
+            const hashed = await bcrypt.hash(newPassword, 10);
+
+            checkUser.password = hashed;
+            await checkUser.save();
+
+            return { message: "Đổi mật khẩu thành công" };
+
+        } catch (error) {
+            return null
+        }
+    }
+
+
 }
 
 module.exports = new userService();
