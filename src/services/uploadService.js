@@ -5,9 +5,9 @@ const uploadService = {
     async uploadImage(filePath) {
         try {
             const result = await cloudinary.uploader.upload(filePath, {
-                folder: "miuwoof", // thư mục trên cloud
+                folder: "miuwoof",
             });
-            fs.unlinkSync(filePath); // xóa file tạm sau khi upload xong
+            fs.unlinkSync(filePath);
             return result.secure_url;
         } catch (error) {
             console.error("Lỗi upload ảnh:", error);

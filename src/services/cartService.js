@@ -1,7 +1,7 @@
 // src/services/cartService.js
 
 const db = require("../models");
-const { cart, cart_item: cartItem, product_variants, product_image } = db; // <-- QUAN TRỌNG: lấy đúng tên model
+const { cart, cart_item: cartItem, product_variants, product_image, product, discount } = db; // <-- QUAN TRỌNG: lấy đúng tên model
 const { v4: uuidv4 } = require("uuid"); // npm install uuid nếu chưa có
 
 class CartService {
@@ -20,6 +20,19 @@ class CartService {
                             as: "product_variant",
                             attributes: ["id", "price", "image", "size", "style", "unit", "flavor"],
                             include: [
+                                {
+                                    model: product,
+                                    attributes: ["id", "name"],
+                                    include: [
+                                        {
+                                            model: discount,
+                                            attributes: ['id', 'discount_value', 'discount_type', 'is_active'],
+                                            through: { attributes: [] },
+                                            where: { is_active: true },
+                                            required: false
+                                        }
+                                    ]
+                                },
                                 {
                                     model: product_image,
                                     as: "ProductImages",
@@ -40,14 +53,16 @@ class CartService {
         const formattedItems = userCart.items.map(i => {
             const variant = i.product_variant;
             const variantImage = variant?.ProductImages?.[0]?.image || variant?.image || "";
+            const product = variant?.Product;
+            const discounts = product?.Discounts || [];
 
             return {
                 id: i.id,
                 name: i.name,
                 price: Number(i.price),
                 quantity: i.quantity,
-                totalPrice: Number(i.price) * i.quantity,
-                image: variantImage, // ảnh hiển thị chung
+                // totalPrice: Number(i.price) * i.quantity,
+                image: variantImage,
                 variant: {
                     id: variant?.id,
                     price: Number(variant?.price || 0),
@@ -55,8 +70,12 @@ class CartService {
                     style: variant?.style,
                     unit: variant?.unit,
                     flavor: variant?.flavor,
-                    image: variantImage, // đồng bộ variant.image với image
-                }
+                    image: variantImage,
+                },
+                discounts: discounts.map(d => ({
+                    discount_type: d.discount_type,
+                    discount_value: d.discount_value,
+                })),
             };
         });
 
@@ -68,8 +87,6 @@ class CartService {
     }
 
     async addItem(userId, items = []) {
-        console.log(userId);
-        console.log(items);
         const userCart = await this.getCart(userId);
 
         for (const item of items) {
@@ -84,7 +101,7 @@ class CartService {
 
             if (existing) {
                 existing.quantity += item.quantity || 1;
-                existing.total_price = existing.quantity * (item.price || 0);
+                // existing.total_price = existing.quantity * (item.price || 0);
                 await existing.save();
             } else {
                 await cartItem.create({
@@ -92,8 +109,8 @@ class CartService {
                     product_variants_id: variantId,
                     name: item.name,
                     quantity: item.quantity,
-                    price: item.price,
-                    total_price: item.price * item.quantity,
+                    // price: item.price,
+                    // total_price: item.price * item.quantity,
                 });
             }
         }

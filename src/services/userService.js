@@ -60,6 +60,7 @@ class userService {
                 email,
                 password,
                 is_locked: 0,
+                is_destroyed: 0,
                 role: "user",
             });
 
