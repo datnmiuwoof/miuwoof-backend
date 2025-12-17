@@ -5,7 +5,7 @@ const cartModel = require("../models/cartModel");
 const cartItemModel = require("../models/cartItemModel");
 const { sequelize, product_variants, cart, product_image, address } = require("../models");
 const { Op } = require("sequelize");
-
+const momoService = require("./momoService");
 const flow = ["pending", "confirmed", "shipping", "completed", "cancelled", "refund"];
 function getNextStatus(current) {
     const i = flow.indexOf(current);
@@ -314,6 +314,56 @@ class orderService {
 
 
     // }
+
+    async cancelOrderClient(orderId, userId) {
+        const t = await sequelize.transaction();
+        try {
+            const order = await orderModel.findOne({
+                where: { id: orderId, user_id: userId },
+                include: [{ model: orderDetailModel }],
+                transaction: t,
+                lock: t.LOCK.UPDATE
+            });
+
+            if (!order) throw new Error("Đơn hàng không tồn tại");
+
+            if (!['pending', 'confirmed'].includes(order.order_status)) {
+                throw new Error("Đơn hàng không thể hủy lúc này.");
+            }
+
+            if (order.payment_status === 'paid' && order.momo_trans_id) {
+                const refundResult = await momoService.refundOrder(
+                    order.id,
+                    order.total_amount,
+                    order.momo_trans_id
+                );
+
+                if (!refundResult.success) {
+                    throw new Error("Lỗi hoàn tiền MoMo: " + refundResult.message);
+                }
+                order.payment_status = 'refund';
+                order.order_note = (order.order_note || "") + " | Đã hoàn tiền MoMo.";
+            }
+
+            order.order_status = 'cancelled';
+            await order.save({ transaction: t });
+
+            for (const item of order.OrderDetails) {
+                 await product_variants.increment('available_quantity', {
+                    by: item.quantity,
+                    where: { id: item.product_variant_id },
+                    transaction: t
+                });
+            }
+
+            await t.commit();
+            return { success: true, message: "Hủy đơn và hoàn tiền thành công" };
+
+        } catch (error) {
+            await t.rollback();
+            throw error;
+        }
+    }
 };
 
 module.exports = new orderService();

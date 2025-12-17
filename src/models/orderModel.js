@@ -64,6 +64,10 @@ const Order = sequelize.define('Order', {
             key: 'id'
         }
     },
+    momo_trans_id: {
+        type: DataTypes.STRING(50),
+        allowNull: true,
+},
 }, {
     tableName: 'order',
     timestamps: true,
