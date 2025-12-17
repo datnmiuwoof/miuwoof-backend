@@ -7,6 +7,7 @@ const cartModel = require("../models/cartModel")
 const { sequelize, order, product_variants, cart_item } = require("../models");
 const crypto = require("crypto");
 const { Op } = require("sequelize");
+const https = require('https');
 
 const PARTNER_CODE = process.env.PARTNER_CODE;
 const ACCESS_KEY = process.env.ACCESS_KEY;
@@ -219,7 +220,7 @@ class MomoService {
             await orderModel.update(
                 {
                     payment_status: "paid",
-                    momo_trans_id: transId || null,
+                    momo_trans_id: transId,
                     paid_at: new Date()
                 },
                 {
@@ -284,6 +285,65 @@ class MomoService {
             } catch (e) {
                 console.error("Lỗi xử lý IPN MoMo:", error);
             }
+        }
+    }
+
+    async refundOrder(orderId, amount, transId) {
+        try {
+            const refundRequestId = `REFUND-${orderId}-${Date.now()}`;
+
+            const rawSignature = `accessKey=${process.env.ACCESS_KEY}&amount=${amount}&description=Hoan tien don hang #${orderId}&orderId=${orderId}&partnerCode=${process.env.PARTNER_CODE}&requestId=${refundRequestId}&transId=${transId}`;
+
+            const signature = crypto
+                .createHmac("sha256", process.env.SECRET_KEY)
+                .update(rawSignature)
+                .digest("hex");
+
+            const requestBody = JSON.stringify({
+                partnerCode: process.env.PARTNER_CODE,
+                orderId: orderId,
+                requestId: refundRequestId,
+                amount: amount,
+                transId: Number(transId),
+                lang: "vi",
+                description: `Hoan tien don hang #${orderId}`,
+                signature: signature
+            });
+
+            // Gửi request
+            const options = {
+                hostname: 'payment.momo.vn',
+                port: 443,
+                path: '/v2/gateway/api/refund',
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(requestBody)
+                }
+            };
+
+            return new Promise((resolve, reject) => {
+                const req = https.request(options, (res) => {
+                    let data = '';
+                    res.on('data', (chunk) => { data += chunk; });
+                    res.on('end', () => {
+                        const response = JSON.parse(data);
+                        console.log("MoMo Refund Response:", response);
+                        if (response && response.resultCode === 0) {
+                            resolve({ success: true, data: response });
+                        } else {
+                            resolve({ success: false, message: response.message || "Lỗi MoMo" });
+                        }
+                    });
+                });
+                req.on('error', (e) => { reject(e); });
+                req.write(requestBody);
+                req.end();
+            });
+
+        } catch (error) {
+            console.error("Refund Error:", error);
+            return { success: false, message: error.message };
         }
     }
 }
