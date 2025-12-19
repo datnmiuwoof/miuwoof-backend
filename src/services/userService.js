@@ -192,6 +192,10 @@ class userService {
                 throw new Error(`Sai mật khẩu. Bạn còn ${5 - attempts} lần thử.`);
             }
 
+            await checkUser.update({
+                login_fail_count: 0,
+                locked_until: null,
+            });
 
 
 

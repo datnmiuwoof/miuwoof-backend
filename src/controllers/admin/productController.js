@@ -1,5 +1,6 @@
 // src/controllers/productController.js
 const productService = require("../../services/productService");
+const product = require('../../models/productmodel')
 
 class ProductController {
   // Lấy tất cả sản phẩm
@@ -142,6 +143,23 @@ class ProductController {
       res.status(500).json({ message: "Lỗi hệ thống khi xóa sản phẩm." });
     }
   }
+
+  async toggleHot(req, res) {
+    try {
+      const { id } = req.params;
+      const { is_hot } = req.body;
+
+      await product.update(
+        { is_hot },
+        { where: { id } }
+      );
+
+      res.json({ message: "Update hot success" });
+    } catch (error) {
+      res.status(500).json({ message: "Update hot failed" });
+    }
+  }
+
 }
 
 module.exports = new ProductController();

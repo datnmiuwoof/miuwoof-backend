@@ -1,10 +1,10 @@
+const { where } = require('sequelize');
 const { banner, product, product_variants, product_image, category, post_model, discount } = require('../../models');
 
 
 class siteController {
     async home(req, res) {
         try {
-            const banners = await banner.findAll();
             const categories = await category.findAll({
                 attributes: ['id', 'name', 'parent_id'],
                 where: {
@@ -128,7 +128,6 @@ class siteController {
 
             res.status(200).json({
                 message: "dữ liệu trang chủ",
-                banners,
                 categories,
                 products_dog,
                 products_cat,
@@ -141,22 +140,16 @@ class siteController {
         }
     }
 
-    // Ví dụ: Trong file emailController.js (hoặc siteController.js)
-
     async handleContactForm(req, res) {
         try {
             const { name, email, message } = req.body;
 
-            // BẮT ĐẦU logic xử lý Form Liên Hệ
-
-            // 1. Kiểm tra dữ liệu đầu vào
             if (!name || !email || !message) {
                 return res
                     .status(400)
                     .json({ message: "Vui lòng điền đầy đủ thông tin." });
             }
 
-            // 2. Gửi email thông báo cho Admin
             await emailService.sendContactNotificationToAdmin({
                 name,
                 email,
@@ -194,7 +187,6 @@ class siteController {
                 message,
             });
 
-            // Gửi mail phản hồi cho khách
             await emailService.sendContactReply(email, name);
 
             return res.status(200).json({
@@ -207,6 +199,15 @@ class siteController {
                 message: "Có lỗi xảy ra, vui lòng thử lại."
             });
         }
+    }
+
+    async getBanner(req, res) {
+        const banners = await banner.findAll({
+            where: { is_active: true },
+            attributes: ['id', 'image']
+        });
+
+        res.status(200).json(banners)
     }
 
 }

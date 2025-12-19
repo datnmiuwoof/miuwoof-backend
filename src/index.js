@@ -18,6 +18,10 @@ const favoriteRouter = require("./router/client/favoriteRouter");
 const orderAdmin = require("./router/admin/orderAdminrouter");
 const postAdminRouter = require("./router/admin/postAdminRouter");
 const AdminDashboard = require("./router/admin/AdminDashboard");
+const profileRouter = require("./router/client/profilerouter");
+const voucherRouter = require("./router/admin/voucherAdminrouter");
+const bannerAdminRouter = require("./router/admin/bannerAdminRouter");
+const shippingMehod = require('./router/client/shipperMethorrouter')
 
 
 const app = express();
@@ -54,6 +58,11 @@ app.use("/api/address", addressRouter);
 app.use("/checkout/success", statusRouter);
 app.use("/api/favorites", favoriteRouter);
 app.use("/api/posts", postAdminRouter);
+app.use("/profile", profileRouter);
+app.use("/api/voucher", voucherRouter);
+app.use("/shipping-methods", shippingMehod);
+
+app.use("/api/banners", bannerAdminRouter);
 
 app.use("/AdminDashboard", AdminDashboard);
 

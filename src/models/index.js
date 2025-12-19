@@ -13,7 +13,6 @@ const address = require("./addressModel");
 const order = require("./orderModel");
 const discount = require("./discountModel");
 const shipping_method = require("./shippingMehodModel");
-const payment = require("./paymentModel");
 const banner = require("./bannerModel");
 const brand = require("./brandModel");
 const productDiscount = require("./productDiscountModel");
@@ -81,8 +80,6 @@ category.hasMany(category, {
 
 
 // ======================== ORDER ========================
-payment.belongsTo(order, { foreignKey: "order_id" });
-order.hasMany(payment, { foreignKey: "order_id" });
 
 order.belongsTo(shipping_method, { foreignKey: "shipping_method_id" });
 shipping_method.hasMany(order, { foreignKey: "shipping_method_id" });
@@ -178,7 +175,6 @@ module.exports = {
   order,
   discount,
   shipping_method,
-  payment,
   banner,
   brand,
   productDiscount,

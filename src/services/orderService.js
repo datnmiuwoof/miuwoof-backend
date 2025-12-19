@@ -2,8 +2,9 @@ const orderModel = require("../models/orderModel");
 const orderDetailModel = require("../models/orderDetailModel");
 const addressModel = require("../models/addressModel");
 const cartModel = require("../models/cartModel");
+const user = require('../models/userModel')
 const cartItemModel = require("../models/cartItemModel");
-const { sequelize, product_variants, cart, product_image, address } = require("../models");
+const { sequelize, product_variants, order_detail, cart, discount, address, shipping_method } = require("../models");
 const { Op } = require("sequelize");
 
 const flow = ["pending", "confirmed", "shipping", "completed", "cancelled", "refund"];
@@ -36,7 +37,6 @@ class orderService {
                     address_line: orderData.address,
                     ward: orderData.ward,
                     city: orderData.city,
-                    name: orderData.name,
                     is_default: true,
                 }, { transaction: t });
 
@@ -44,26 +44,84 @@ class orderService {
                 addressId = newAddress.id;
             }
 
-            const totalPrice = orderData.items.reduce(
-                (sum, item) => sum + item.price * item.quantity,
+            let shippingFee = 0;
+
+            // chỉ lấy shipping khi có id
+            if (orderData.shipping_method_id) {
+                const shippingMethod = await shipping_method.findByPk(
+                    orderData.shipping_method_id
+                );
+
+                if (!shippingMethod) {
+                    throw new Error("Shipping method không tồn tại");
+                }
+
+                shippingFee = shippingMethod.shipping_fee;
+            }
+
+            const PriceNotSgipper = orderData.items.reduce(
+                (sum, item) => sum + item.final_price * item.quantity,
                 0
             );
 
+            // discount phần giảm theo code
+            let discountAmount = 0;
+            let discountId = null;
+
+            if (orderData.discount_id) {
+                const voucher = await discount.findByPk(
+                    orderData.discount_id,
+                    { transaction: t }
+                );
+
+                if (!voucher || !voucher.is_active) {
+                    throw new Error("Mã giảm giá không hợp lệ");
+                }
+
+                const now = new Date();
+
+                if (voucher.start_date && now < voucher.start_date) {
+                    throw new Error("Mã giảm giá chưa bắt đầu");
+                }
+
+                if (voucher.end_date && now > voucher.end_date) {
+                    throw new Error("Mã giảm giá đã hết hạn");
+                }
+
+                if (PriceNotSgipper < voucher.min_order_value) {
+                    throw new Error(
+                        `Đơn tối thiểu ${voucher.min_order_value.toLocaleString('vi-VN')}₫`
+                    );
+                }
+
+                // discount_value = % (ví dụ 15)
+                discountAmount = Math.floor(
+                    PriceNotSgipper * voucher.discount_value / 100
+                );
+
+                if (voucher.max_order_value && discountAmount > voucher.max_order_value) {
+                    discountAmount = voucher.max_order_value;
+                }
+
+                discountId = voucher.id;
+            }
+
+            const totalPrice = PriceNotSgipper + shippingFee - discountAmount;
 
             const newOrder = await orderModel.create({
                 user_id: userId,
                 address_id: addressId,
                 total_amount: totalPrice,
                 order_status: "pending",
-                payment_status: "paid",
+                payment_status: "pending",
+                discount_amount: discountAmount,
+                discount_id: discountId || null,
                 order_date: new Date(),
                 shipping_method_id: orderData.shipping_method_id || 1,
-                discount_id: orderData.discount_id || null
 
             }, { transaction: t });
 
             for (const item of orderData.items) {
-                console.log("item", item)
                 await orderDetailModel.create({
                     order_id: newOrder.id,
                     product_variant_id: item.product_variant_id,
@@ -226,7 +284,7 @@ class orderService {
                 where,
                 include: [
                     { model: orderDetailModel },
-                    { model: address }
+                    { model: user }
                 ],
                 limit,
                 offset,
@@ -282,6 +340,11 @@ class orderService {
 
             order.order_status = nextStatus;
 
+            if (nextStatus === "completed") {
+                order.payment_status = "paid";
+
+            }
+
             await order.save();
             return order;
         } catch (error) {
@@ -289,31 +352,55 @@ class orderService {
         }
     }
 
-    // async cancelledOrderOrder(orderId) {
-    //     try {
-    //         const order = await orderModel.findOne({
-    //             where: { id: orderId },
-    //             include: [
-    //                 {
-    //                     model: orderDetailModel,
-    //                     attributes: [],
-    //                     include: [
-    //                         { model: product_variants }
-    //                     ]
-    //                 }
-    //             ]
-    //         });
-    //         if (!order) return false;
-    //         return order;
 
+    async cancelledOrderOrder(orderId) {
+        const t = await sequelize.transaction();
+        try {
+            const order = await orderModel.findOne({
+                where: { id: orderId },
+                include: [
+                    {
+                        model: order_detail,
+                        include: [{ model: product_variants }]
+                    }
+                ],
+                transaction: t
+            });
 
-    //     } catch (error) {
+            if (!order) {
+                await t.rollback();
+                return null;
+            }
 
-    //     }
+            if (order.order_status === "cancelled") {
+                await t.rollback();
+                return "already_cancelled";
+            }
 
+            const orderDetailsArray = order.order_details || order.OrderDetails || [];
 
+            for (const item of orderDetailsArray) {
+                await product_variants.increment("available_quantity", {
+                    by: item.quantity,
+                    where: { id: item.product_variant_id },
+                    transaction: t,
+                });
+            }
 
-    // }
+            // Hủy đơn
+            order.order_status = "cancelled";
+            await order.save({ transaction: t });
+
+            await t.commit();
+
+            return order.toJSON();
+        } catch (error) {
+            await t.rollback();
+            console.error(error);
+            throw error;
+        }
+    }
+
 };
 
 module.exports = new orderService();

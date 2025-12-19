@@ -9,7 +9,7 @@ const ProductDiscount = sequelize.define('ProductDiscount', {
     },
     product_id: {
         type: DataTypes.INTEGER.UNSIGNED,
-        allowNull: false,
+        allowNull: true,
         references: {
             model: 'product',
             key: 'id',
@@ -19,7 +19,7 @@ const ProductDiscount = sequelize.define('ProductDiscount', {
     },
     discount_id: {
         type: DataTypes.INTEGER.UNSIGNED,
-        allowNull: false,
+        allowNull: true,
         references: {
             model: 'discount',
             key: 'id',

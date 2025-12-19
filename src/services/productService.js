@@ -3,6 +3,7 @@ const {
   sequelize,
   product,
   product_variants,
+  productDiscount,
   product_image,
   category,
   brand,
@@ -42,12 +43,12 @@ class ProductService {
     const { count, rows } = await product.findAndCountAll({
       where: { is_deleted: false },
       include: [
-        {
-          model: Category,
-          through: { attributes: [] },
-          attributes: ['id', 'name', 'slug'],
-          required: false,
-        },
+        // {
+        //   model: Category,
+        //   through: { attributes: [] },
+        //   attributes: ['id', 'name', 'slug'],
+        //   required: false,
+        // },
         {
           model: product_variants,
           where: { is_deleted: false },
@@ -83,6 +84,9 @@ class ProductService {
     const t = await sequelize.transaction();
     try {
       const categories = JSON.parse(productData.category_ids);
+      const discountIds = productData.discountIds
+        ? JSON.parse(productData.discountIds)
+        : [];
       const newproduct = await product.create(
         {
           name: productData.name,
@@ -101,6 +105,16 @@ class ProductService {
         }, { transaction: t })
       }
 
+      if (discountIds.length > 0) {
+        await productDiscount.bulkCreate(
+          discountIds.map(id => ({
+            product_id: newproduct.id,
+            discount_id: id,
+          })),
+          { transaction: t }
+        );
+      }
+
 
       let variants = productData.variants
       if (typeof variants === "string") {
@@ -117,6 +131,7 @@ class ProductService {
           unit: v.unit,
           flavor: v.flavor,
           price: v.price,
+          available_quantity: Number(v.available_quantity) || 0,
         }, { transaction: t });
 
         const fileimage = files.filter(v => v.fieldname == `variants_images_${i}`);
@@ -263,6 +278,7 @@ class ProductService {
     if (!result) {
       throw new Error("Không tìm thấy sản phẩm.");
     }
+
     return result;
   }
 
@@ -303,6 +319,13 @@ class ProductService {
     if (!result) {
       throw new Error("Không tìm thấy sản phẩm.");
     }
+
+
+    await product.increment(
+      { views: 1 },
+      { where: { slug } }
+    );
+
     return result;
   }
 
@@ -377,6 +400,23 @@ class ProductService {
       }
 
 
+      if (productData.discount_id) {
+        await productDiscount.destroy({
+          where: { product_id: productId }
+        });
+
+        // gán mã mới nếu có
+        if (productDiscount) {
+          await productDiscount.create({
+            product_id: productId,
+            discount_id: productData.discount_id,
+          });
+        }
+
+      }
+
+
+
       //chuyển đổi thành sting nếu k đúng kiểu
       if (typeof productData.variants === "string") {
         try {
@@ -387,7 +427,7 @@ class ProductService {
         }
       }
 
-      const { Op, where, } = require("sequelize");
+      const { Op } = require("sequelize");
       const variantIdsToKeep = JSON.parse(productData.tokeepvariants || "[]");
 
       const variantsToDelete = await product_variants.findAll({

@@ -11,6 +11,10 @@ const Discount = sequelize.define('Discount', {
         type: DataTypes.STRING(100),
         allowNull: false,
     },
+    description: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+    },
     discount_value: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -26,11 +30,11 @@ const Discount = sequelize.define('Discount', {
     },
     start_date: {
         type: DataTypes.DATE,
-        allowNull: false,
+        allowNull: true,
     },
     end_date: {
         type: DataTypes.DATE,
-        allowNull: false,
+        allowNull: true,
     },
     is_active: {
         type: DataTypes.BOOLEAN,
@@ -39,28 +43,20 @@ const Discount = sequelize.define('Discount', {
     },
     min_order_value: {
         type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
+        allowNull: true,
     },
     max_order_value: {
         type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
+        allowNull: true,
     },
     code: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     used_quantity: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
         defaultValue: 0,
-    },
-    user_id: {
-        type: DataTypes.INTEGER.UNSIGNED,
-        allowNull: false,
-        references: {
-            model: 'user',
-            key: 'id',
-        }
     },
 }, {
     tableName: 'discount',

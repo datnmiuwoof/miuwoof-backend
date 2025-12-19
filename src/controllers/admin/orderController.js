@@ -54,15 +54,22 @@ class OrderController {
         }
     }
 
-    // async cancelledOrder(req, res) {
-    //     const { id } = req.body;
-    //     if (!id) return res.status(404).json({ error: "id not found" });
+    async cancelledOrder(req, res) {
+        try {
+            const { id } = req.body;
+            if (!id) return res.status(400).json({ error: "id not found" });
 
-    //     const result = await orderService.cancelledOrderOrder(id);
+            const result = await orderService.cancelledOrderOrder(id);
 
-    //     console.log(result)
+            if (!result) return res.status(404).json({ error: "Order not found" });
+            if (result === "already_cancelled") return res.status(400).json({ error: "Order already cancelled" });
 
-    // }
+            return res.json(result);
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: "Internal server error" });
+        }
+    }
 }
 
 

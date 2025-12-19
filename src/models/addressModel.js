@@ -15,10 +15,6 @@ const Address = sequelize.define('Address', {
         type: DataTypes.STRING(20),
         allowNull: false,
     },
-    name: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
-    },
     address_line: {
         type: DataTypes.STRING(255),
         allowNull: false,
