@@ -4,7 +4,7 @@ const addressModel = require("../models/addressModel");
 const cartModel = require("../models/cartModel");
 const user = require('../models/userModel')
 const cartItemModel = require("../models/cartItemModel");
-const { sequelize, product_variants, order_detail, cart, discount, address, shipping_method } = require("../models");
+const { sequelize, product_variants, order_detail, cart, discount, address, shipping_method, review } = require("../models");
 const { Op } = require("sequelize");
 
 const flow = ["pending", "confirmed", "shipping", "completed", "cancelled", "refund"];
@@ -232,7 +232,8 @@ class orderService {
                             include: [
                                 {
                                     model: product_variants,
-                                }
+                                },
+                                { model: review }
                             ]
                         }
                     ]

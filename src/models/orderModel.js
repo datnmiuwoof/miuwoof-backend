@@ -29,6 +29,10 @@ const Order = sequelize.define('Order', {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
     },
+    transaction_code: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     payment_status: {
         type: DataTypes.ENUM('pending', 'paid', 'failed', 'canceled', 'refund'),
         defaultValue: 'pending',

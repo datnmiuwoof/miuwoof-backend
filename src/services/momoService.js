@@ -440,7 +440,7 @@ class MomoService {
             await orderModel.update(
                 {
                     payment_status: "paid",
-                    momo_trans_id: transId || null,
+                    transaction_code: transId || null,
                     paid_at: new Date()
                 },
                 {

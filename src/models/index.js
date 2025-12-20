@@ -58,9 +58,6 @@ product_variants.belongsTo(product, { foreignKey: "product_id" });
 product.hasMany(favorite, { foreignKey: "product_id" });
 favorite.belongsTo(product, { foreignKey: "product_id" });
 
-product.hasMany(review, { foreignKey: "product_id" });
-review.belongsTo(product, { foreignKey: "product_id" });
-
 product_variants.hasMany(product_image, { foreignKey: "product_variants_id" });
 product_image.belongsTo(product_variants, { foreignKey: "product_variants_id" });
 
@@ -96,6 +93,9 @@ order_detail.belongsTo(order, { foreignKey: "order_id" });
 // ✅ Sửa: chỉ belongsTo thôi
 order_detail.belongsTo(product_variants, { foreignKey: "product_variant_id" });
 product_variants.hasMany(order_detail, { foreignKey: "product_variant_id" });
+
+order_detail.hasMany(review, { foreignKey: "order_detail_id" });
+review.belongsTo(order_detail, { foreignKey: "order_detail_id" });
 
 
 

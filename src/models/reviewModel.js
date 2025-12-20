@@ -7,6 +7,10 @@ const Review = sequelize.define('Review', {
         autoIncrement: true,
         primaryKey: true,
     },
+    rating: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
     user_id: {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
@@ -17,11 +21,11 @@ const Review = sequelize.define('Review', {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
     },
-    product_id: {
+    order_detail_id: {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,
         references: {
-            model: 'product',
+            model: 'order_detail',
             key: 'id',
         },
     },
