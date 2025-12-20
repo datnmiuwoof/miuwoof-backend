@@ -19,7 +19,7 @@ class userController {
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000);
-    console.log(otp)
+
     await saveOTP(email, otp, name, password);
     await emailService.sendRegisterOtp(email, otp);
     return res.status(200).json({ message: "OTP đã gửi về email" });
