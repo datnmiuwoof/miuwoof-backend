@@ -1,4 +1,5 @@
 const orderService = require("../../services/orderService");
+const order = require("../../models/orderModel")
 
 class OrderController {
 
@@ -68,6 +69,63 @@ class OrderController {
         } catch (error) {
             console.error(error);
             return res.status(500).json({ error: "Internal server error" });
+        }
+    }
+
+    async softDelete(req, res) {
+        try {
+            const { id } = req.params;
+
+            const orderData = await order.findByPk(id);
+            if (!orderData) {
+                return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+            }
+
+            await orderData.update({ is_deleted: 1 });
+
+            return res.status(200).json({ message: "Xóa đơn hàng thành công" });
+        } catch (error) {
+            return res.status(500).json({ message: error.message });
+        }
+    }
+
+    async getDeletedOrders(req, res) {
+        try {
+            const { page } = req.query;
+
+            const result = await orderService.getDeletedOrders({
+                page: Number(page) || 1,
+            });
+
+            res.status(201).json({
+                success: true,
+                result,
+            });
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                message: error.message,
+            });
+        }
+    }
+
+    // controllers/admin/order.controller.js
+    async restoreOrder(req, res) {
+        try {
+            const { id } = req.params;
+
+            await orderService.restoreOrder(id);
+
+            return res.json({
+                success: true,
+                message: "Khôi phục đơn hàng thành công",
+            });
+        } catch (error) {
+            console.log("❌ restoreOrder error:", error);
+            return res.status(400).json({
+                success: false,
+                message: error.message,
+            });
         }
     }
 }

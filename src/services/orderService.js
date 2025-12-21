@@ -206,7 +206,8 @@ class orderService {
                             include: [
                                 {
                                     model: product_variants,
-                                }
+                                },
+                                { model: review }
                             ]
                         }
                     ]
@@ -275,7 +276,7 @@ class orderService {
     async getAlladminorder(page, limit, status) {
         try {
             const offset = (page - 1) * limit;
-            let where = {};
+            let where = { is_deleted: 0 };
 
             if (status && status !== "all") {
                 where.order_status = status;
@@ -401,6 +402,43 @@ class orderService {
             throw error;
         }
     }
+
+    // services/admin/order.service.js
+
+    // services/admin/order.service.js
+    async getDeletedOrders({ page = 1, limit = 10 }) {
+        const offset = (page - 1) * limit;
+
+        const where = { is_deleted: 1 };
+
+        const result = await orderModel.findAndCountAll({
+            where,
+            include: [
+                { model: orderDetailModel },
+                { model: user }
+            ],
+            limit,
+            offset,
+            order: [["id", "DESC"]],
+        });
+
+        return result; // { rows, count }
+    }
+
+    async restoreOrder(id) {
+        const orderData = await orderModel.findByPk(id);
+        if (!orderData) {
+            throw new Error("Không tìm thấy đơn hàng");
+        }
+
+        await orderData.update({
+            is_deleted: false,
+        });
+
+        return true;
+    }
+
+
 
 };
 

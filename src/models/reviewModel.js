@@ -29,6 +29,10 @@ const Review = sequelize.define('Review', {
             key: 'id',
         },
     },
+    is_active: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
     content: {
         type: DataTypes.TEXT,
         allowNull: false,

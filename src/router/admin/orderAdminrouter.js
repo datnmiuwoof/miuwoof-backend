@@ -4,9 +4,14 @@ const router = express.Router();
 const ordercontroller = require("../../controllers/admin/orderController");
 const authmiddlewares = require("../../middlewares/middlewares");
 
-router.put("/cancelled", authmiddlewares("admin"), ordercontroller.cancelledOrder);
-router.post("/update", authmiddlewares("admin"), ordercontroller.updateStatusOrder);
-router.get("/:id", authmiddlewares("admin"), ordercontroller.getDetailOrder);
-router.get("/", authmiddlewares("admin"), ordercontroller.getAllOrder);
+router.use(authmiddlewares("admin"));
+
+router.put("/cancelled", ordercontroller.cancelledOrder);
+router.put("/:id/delete", ordercontroller.softDelete);
+router.get("/deleted", ordercontroller.getDeletedOrders);
+router.put("/restore/:id", ordercontroller.restoreOrder);
+router.post("/update", ordercontroller.updateStatusOrder);
+router.get("/:id", ordercontroller.getDetailOrder);
+router.get("/", ordercontroller.getAllOrder);
 
 module.exports = router;

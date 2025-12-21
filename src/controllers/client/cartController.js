@@ -1,4 +1,5 @@
 const CartService = require("../../services/cartService");
+const { cart, cart_item, product_variants } = require("../../models");
 
 class CartController {
     async getCart(req, res) {
@@ -45,6 +46,8 @@ class CartController {
         const cart = await CartService.syncCart(req.user.id, items);
         res.json(cart);
     }
+
+
 }
 
 module.exports = new CartController();

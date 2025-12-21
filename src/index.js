@@ -22,7 +22,8 @@ const profileRouter = require("./router/client/profilerouter");
 const voucherRouter = require("./router/admin/voucherAdminrouter");
 const bannerAdminRouter = require("./router/admin/bannerAdminRouter");
 const shippingMehod = require('./router/client/shipperMethorrouter');
-const commentRouter = require('./router/client/commentrouter')
+const commentRouter = require('./router/client/commentrouter');
+const commentAdminRouter = require('./router/admin/commentrouter');
 
 
 const app = express();
@@ -63,6 +64,7 @@ app.use("/profile", profileRouter);
 app.use("/api/voucher", voucherRouter);
 app.use("/shipping-methods", shippingMehod);
 app.use("/comment", commentRouter)
+app.use("/api/comment", commentAdminRouter)
 
 app.use("/api/banners", bannerAdminRouter);
 
