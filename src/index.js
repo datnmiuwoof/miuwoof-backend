@@ -19,6 +19,8 @@ const orderAdmin = require("./router/admin/orderAdminrouter");
 const postAdminRouter = require("./router/admin/postAdminRouter");
 const AdminDashboard = require("./router/admin/AdminDashboard");
 const bannerAdminRouter = require("./router/admin/bannerAdminRouter");
+const passport = require("passport");
+require("./middlewares/passport");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -60,6 +62,8 @@ app.use("/AdminDashboard", AdminDashboard);
 app.use("/api/banners", bannerAdminRouter);
 
 app.use("/AdminDashboard", AdminDashboard);
+
+app.use(passport.initialize());
 
 (async () => {
   await connectDB();

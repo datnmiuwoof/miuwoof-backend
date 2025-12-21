@@ -7,6 +7,10 @@ const User = sequelize.define('User', {
         autoIncrement: true,
         primaryKey: true,
     },
+    google_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     name: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -20,7 +24,7 @@ const User = sequelize.define('User', {
     },
     password: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     token: {
         type: DataTypes.STRING,
@@ -40,7 +44,7 @@ const User = sequelize.define('User', {
     },
     is_destroyed: {
         type: DataTypes.BOOLEAN,
-        allowNull: false,
+        allowNull: true,
     },
     login_fail_count: {
         type: DataTypes.INTEGER,
