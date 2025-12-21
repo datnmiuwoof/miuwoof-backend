@@ -1,5 +1,6 @@
-const { where } = require('sequelize');
+const Joi = require("joi");
 const { banner, product, product_variants, product_image, category, post_model, discount } = require('../../models');
+const emailService = require('../../services/emailService')
 
 
 class siteController {
@@ -210,6 +211,40 @@ class siteController {
         res.status(200).json(banners)
     }
 
+    async submitContact(req, res) {
+        const schema = Joi.object({
+            name: Joi.string().required().messages({
+                "string.empty": "Vui lòng nhập tên",
+                "any.required": "Tên là bắt buộc",
+            }),
+            email: Joi.string().email().required().messages({
+                "string.email": "Email không hợp lệ",
+                "any.required": "Email là bắt buộc",
+            }),
+            phone: Joi.string().allow("").optional(),
+            message: Joi.string().required().messages({
+                "string.empty": "Vui lòng nhập nội dung liên hệ",
+                "any.required": "Nội dung là bắt buộc",
+            }),
+        });
+
+        const { error, value } = schema.validate(req.body);
+        if (error) {
+            return res.status(400).json({ message: error.details[0].message });
+        }
+
+        try {
+            // Gửi cả 2 email cùng lúc
+            await emailService.sendContactEmails(value);
+
+            return res.status(200).json({
+                message: "Gửi liên hệ thành công! Chúng tôi sẽ phản hồi bạn sớm nhất.",
+            });
+        } catch (err) {
+            console.error(err);
+            return res.status(500).json({ message: "Có lỗi xảy ra, vui lòng thử lại sau." });
+        }
+    }
 }
 
 module.exports = new siteController;

@@ -20,13 +20,17 @@ const User = sequelize.define('User', {
     },
     password: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     token: {
         type: DataTypes.STRING,
         allowNull: true,
     },
     phone_number: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    google_id: {
         type: DataTypes.STRING,
         allowNull: true,
     },
@@ -40,7 +44,7 @@ const User = sequelize.define('User', {
     },
     is_destroyed: {
         type: DataTypes.BOOLEAN,
-        allowNull: false,
+        allowNull: true,
     },
     login_fail_count: {
         type: DataTypes.INTEGER,

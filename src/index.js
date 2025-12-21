@@ -24,7 +24,8 @@ const bannerAdminRouter = require("./router/admin/bannerAdminRouter");
 const shippingMehod = require('./router/client/shipperMethorrouter');
 const commentRouter = require('./router/client/commentrouter');
 const commentAdminRouter = require('./router/admin/commentrouter');
-
+const passport = require("passport");
+require("./middlewares/passport");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -44,6 +45,8 @@ app.use(
 app.set("view engine", "ejs");
 app.set("views", "./src/views");
 app.use(express.static("./src/public"));
+
+app.use(passport.initialize());
 
 app.use("/", siteRouter);
 app.use("/product", productRouter);
@@ -69,7 +72,6 @@ app.use("/api/comment", commentAdminRouter)
 app.use("/api/banners", bannerAdminRouter);
 
 app.use("/AdminDashboard", AdminDashboard);
-
 
 
 (async () => {

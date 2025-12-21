@@ -61,8 +61,34 @@ class EmailService {
     })
   }
 
-  // Gửi email xác nhận liên hệ (ví dụ đầu tiên)
 
+  async sendContactNotificationToAdmin(contactData) {
+    const subject = `[MiuWoof] Liên hệ mới từ ${contactData.name}`;
+    const html = `
+      <h1>🔔 Có liên hệ mới từ khách hàng</h1>
+      <p><strong>Họ tên:</strong> ${contactData.name}</p>
+      <p><strong>Email:</strong> ${contactData.email}</p>
+      <p><strong>Số điện thoại:</strong> ${contactData.phone || "Không cung cấp"}</p>
+      <p><strong>Nội dung:</strong></p>
+      <div style="background:#f9f9f9; padding:15px; border-left:4px solid #10b981; border-radius:4px;">
+        ${contactData.message.replace(/\n/g, '<br>')}
+      </div>
+      <br>
+      <p>Vui lòng phản hồi khách hàng sớm nhé!</p>
+      <hr>
+      <p><small>Email được gửi tự động từ form liên hệ MiuWoof Shop</small></p>
+    `;
+
+    // Dùng ADMIN_EMAIL từ .env, fallback về email cá nhân của bạn
+    const adminEmail = process.env.MAIL_USER || "datnmiuwoof@gmail.com";
+    await this.sendMail({
+      to: adminEmail,         // ← Đúng: gửi cho admin
+      subject: subject,
+      html: html,
+    });
+  }
+
+  // Gửi email xác nhận liên hệ (ví dụ đầu tiên)
   async sendContactReply(userEmail, userName) {
     const subject = "Cảm ơn bạn đã liên hệ với MiuWoof Shop!";
     const html = `
@@ -81,24 +107,26 @@ class EmailService {
     });
   }
 
+  async sendContactEmails(contactData) {
+    try {
+      const { name, email, phone, message } = contactData;
 
-  // Gửi thông báo có liên hệ mới cho Admin (ví dụ)
+      // 1. Gửi email cảm ơn cho khách
+      await this.sendContactReply(email, name);
 
-  async sendContactNotificationToAdmin(contactData) {
-    const subject = `[MiuWoof] Bạn có liên hệ mới từ ${contactData.name}`;
-    const html = `
-            <h1>Thông báo liên hệ mới</h1>
-            <p><strong>Tên:</strong> ${contactData.name}</p>
-            <p><strong>Email:</strong> ${contactData.email}</p>
-            <p><strong>Nội dung:</strong></p>
-            <p>${contactData.message}</p>
-        `;
+      // 2. Gửi thông báo cho admin
+      await this.sendContactNotificationToAdmin({
+        name,
+        email,
+        phone: phone || "Không có",
+        message,
+      });
 
-    await this.sendMail({
-      to: "nguyenthegiaan39@gmail.com",
-      subject: subject,
-      html: html,
-    });
+      console.log("Đã gửi email liên hệ thành công cho cả khách và admin");
+    } catch (error) {
+      console.error("Lỗi khi gửi email liên hệ:", error);
+      throw new Error("Gửi email liên hệ thất bại");
+    }
   }
 
   // Sau này, bạn chỉ cần thêm các hàm mới vào đây

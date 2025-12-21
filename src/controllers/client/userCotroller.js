@@ -2,6 +2,7 @@ const userService = require("../../services/userService");
 const emailService = require("../../services/emailService");
 const { saveOTP, verifyOTP, saveForgotPasswordOTP, checkverifyOTP } = require("../../services/otpService");
 const Joi = require("joi");
+const jwt = require("jsonwebtoken");
 
 class userController {
   //register/ tạo tài khoản
@@ -55,9 +56,6 @@ class userController {
   //reset password
   async passwordReset(req, res) {
     const { otp, newPassword, confirmPassword, email } = req.body;
-
-    console.log("otp", otp, newPassword, confirmPassword, email)
-
     if (!otp || !email || !newPassword || !confirmPassword) {
       return res.status(400).json({ message: "Thiếu dữ liệu required" });
     }
@@ -222,6 +220,42 @@ class userController {
       return res.json(result);
     } catch (err) {
       return res.status(400).json({ message: err.message });
+    }
+  }
+
+  async googleCallback(req, res) {
+    try {
+      const user = req.user;
+
+      // Tạo Token - SỬA DÒNG NÀY
+      const token = jwt.sign(
+        {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role
+        },
+        process.env.JWT_SECRET || "secret_key",
+        { expiresIn: "1d" }
+      );
+
+      // Phần còn lại giữ nguyên hoặc sửa theo khuyến nghị trước
+      res.cookie("token", token, {
+        httpOnly: true,      // khuyến nghị: true để an toàn hơn
+        secure: false,       // localhost thì false, production thì true
+        sameSite: "lax",
+        path: "/",
+        maxAge: 24 * 60 * 60 * 1000,
+      });
+
+      const frontendUrl = "http://localhost:3005";
+      return res.redirect(
+        `${frontendUrl}/login-success?name=${encodeURIComponent(user.name)}&role=${user.role}&id=${user.id}`
+      );
+
+    } catch (error) {
+      console.error("Google Callback Error:", error);
+      return res.redirect("http://localhost:3005/account/register?error=auth_failed");
     }
   }
 }

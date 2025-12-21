@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const authmiddlewares = require("../../middlewares/middlewares");
 const userController = require("../../controllers/client/userCotroller");
+const passport = require("passport");
 
 
 
@@ -17,8 +18,15 @@ router.post("/logout", (req, res) => {
     res.status(200).json({ message: "Logged out" });
 });
 
-
-
+router.get(
+    "/auth/google",
+    passport.authenticate("google", { scope: ["profile", "email"] })
+)
+router.get(
+    "/auth/google/callback",
+    passport.authenticate("google", { session: false, failureRedirect: "/login-fail" }),
+    userController.googleCallback
+);
 
 
 module.exports = router;
