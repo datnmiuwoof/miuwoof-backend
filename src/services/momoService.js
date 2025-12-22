@@ -204,13 +204,12 @@ class MomoService {
                 shippingFee = shippingMethod.shipping_fee;
             }
 
-            /* ================== 3. SUBTOTAL ================== */
+
             const subtotal = orderData.items.reduce(
                 (sum, item) => sum + item.final_price * item.quantity,
                 0
             );
 
-            /* ================== 4. DISCOUNT (BACKEND TỰ TÍNH) ================== */
             let discountAmount = 0;
             let discountId = null;
 
@@ -252,10 +251,8 @@ class MomoService {
                 discountId = voucher.id;
             }
 
-            /* ================== 5. TOTAL ================== */
             const totalPrice = subtotal + shippingFee - discountAmount;
 
-            /* ================== 6. CREATE ORDER ================== */
             const newOrder = await orderModel.create({
                 user_id: userId,
                 address_id: addressId,
@@ -263,7 +260,7 @@ class MomoService {
                 subtotal: subtotal,
                 shipping_fee: shippingFee,
 
-                discount_amount: discountAmount, // 🔥 snapshot
+                discount_amount: discountAmount,
                 discount_id: discountId,
 
                 total_amount: totalPrice,
@@ -280,7 +277,7 @@ class MomoService {
                     order_id: newOrder.id,
                     product_variant_id: item.product_variant_id,
                     name: item.name,
-                    image: item.Image,
+                    image: item.image,
                     price: item.final_price,
                     quantity: item.quantity,
                 }, { transaction: t });

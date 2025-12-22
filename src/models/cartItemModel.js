@@ -32,14 +32,14 @@ const cartItem = sequelize.define("cartItem", {
         type: DataTypes.STRING,
         allowNull: false,
     },
-    total_price: {
-        type: DataTypes.DECIMAL,
-        allowNull: true,
-    },
-    price: {
-        type: DataTypes.DECIMAL,
-        allowNull: true,
-    },
+    // total_price: {
+    //     type: DataTypes.DECIMAL,
+    //     allowNull: true,
+    // },
+    // price: {
+    //     type: DataTypes.DECIMAL,
+    //     allowNull: true,
+    // },
 }, {
     tableName: "cart_item",
     timestamps: false,

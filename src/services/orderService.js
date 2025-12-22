@@ -126,7 +126,7 @@ class orderService {
                     order_id: newOrder.id,
                     product_variant_id: item.product_variant_id,
                     name: item.name,
-                    image: item.Image,
+                    image: item.image,
                     price: item.price,
                     quantity: item.quantity,
                 }, { transaction: t });
@@ -210,7 +210,8 @@ class orderService {
                                 { model: review }
                             ]
                         }
-                    ]
+                    ],
+                    order: [['id', 'DESC']]
                 }
             );
 
@@ -237,7 +238,9 @@ class orderService {
                                 { model: review }
                             ]
                         }
-                    ]
+                    ],
+                    order: [['id', 'DESC']]
+
                 }
             );
 
