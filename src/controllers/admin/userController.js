@@ -94,8 +94,6 @@ class userController {
 
             if (!result) return res.status(400).json({ message: "lỗi không lấy được dữ liệu" });
 
-            console.log(result)
-
             res.status(200).json({
                 data: result.rows,
                 total: result.count,

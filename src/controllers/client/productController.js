@@ -33,7 +33,6 @@ class ProductController {
 
     //lấy sản phẩm theo loại
     async getCollections(req, res) {
-        // console.log(req.query.limit)
         try {
             const limit = parseInt(req.query.limit, 10) || 8;
             const { slug } = req.params;

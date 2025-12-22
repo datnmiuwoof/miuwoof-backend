@@ -179,7 +179,6 @@ class siteController {
                 });
             }
 
-            console.log(">>> Đang xử lý form liên hệ...");
 
             // Gửi mail thông báo đến admin
             await emailService.sendContactNotificationToAdmin({

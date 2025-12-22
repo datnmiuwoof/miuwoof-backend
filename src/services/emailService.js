@@ -35,7 +35,7 @@ class EmailService {
 
 
       const info = await this.transporter.sendMail(mailOptions);
-      console.log("Email đã gửi thành công:", info.messageId);
+      // console.log("Email đã gửi thành công:", info.messageId);
       return info;
     } catch (error) {
       console.error("Lỗi khi gửi email:", error);
@@ -122,7 +122,7 @@ class EmailService {
         message,
       });
 
-      console.log("Đã gửi email liên hệ thành công cho cả khách và admin");
+      // console.log("Đã gửi email liên hệ thành công cho cả khách và admin");
     } catch (error) {
       console.error("Lỗi khi gửi email liên hệ:", error);
       throw new Error("Gửi email liên hệ thất bại");

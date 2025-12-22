@@ -23,8 +23,6 @@ class profileController {
 
             const result = await profileService.addAddress(userId, body);
 
-            console.log(result)
-
             if (!result) {
                 return res.status(400).json({ message: "khonog theem duocw address" })
             }

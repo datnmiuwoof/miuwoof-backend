@@ -13,7 +13,6 @@ class CartController {
     }
 
     async addItem(req, res) {
-        console.log("ADD ITEM REQ BODY:", req.body);
         try {
             const items = req.body.items;
             const userId = req.user.id;

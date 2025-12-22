@@ -3,7 +3,6 @@ const addressService = require("../../services/addressService");
 
 class addressController {
     async checkoutAddress(req, res) {
-        console.log('REQ USER:', req.user);
         try {
             const userId = req.user.id;
             const addresses = await addressService.checkoutAddress(userId);

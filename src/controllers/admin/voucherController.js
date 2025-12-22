@@ -109,7 +109,6 @@ class voucherController {
     }
 
     async applyDiscount(req, res) {
-        console.log('BODY:', req.body);
         try {
             const { code, subtotal } = req.body;
 
