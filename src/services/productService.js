@@ -402,17 +402,17 @@ class ProductService {
 
       if (productData.discount_id) {
         await productDiscount.destroy({
-          where: { product_id: productId }
+          where: { product_id: productId },
+          transaction: t
         });
 
-        // gán mã mới nếu có
-        if (productDiscount) {
-          await productDiscount.create({
+        await productDiscount.create(
+          {
             product_id: productId,
             discount_id: productData.discount_id,
-          });
-        }
-
+          },
+          { transaction: t }
+        );
       }
 
 

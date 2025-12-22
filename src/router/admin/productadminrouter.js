@@ -7,6 +7,7 @@ const productController = require("../../controllers/admin/productController");
 router.use(authmiddlewares("admin"));
 // Đặt các route cụ thể lên trước
 router.patch("/:id/hot", productController.toggleHot);
+router.patch("/:id/restore", productController.restoreProduct);
 router.get("/deleted", productController.getSoftDelete);
 router.get("/:id", productController.getProductById);
 router.put("/:id", upload.any(), productController.updateProduct);

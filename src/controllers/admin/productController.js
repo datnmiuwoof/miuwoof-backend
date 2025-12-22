@@ -160,6 +160,39 @@ class ProductController {
     }
   }
 
+
+  async restoreProduct(req, res) {
+    try {
+      const { id } = req.params;
+
+      const productToRestore = await product.findByPk(id);
+      if (!productToRestore) {
+        return res.status(404).json({
+          message: "Không tìm thấy sản phẩm",
+        });
+      }
+
+      if (!productToRestore.is_deleted) {
+        return res.status(400).json({
+          message: "Sản phẩm chưa bị xóa, không cần khôi phục",
+        });
+      }
+
+      await productToRestore.update({
+        is_deleted: false,
+      });
+
+      return res.status(200).json({
+        message: "Khôi phục sản phẩm thành công",
+      });
+    } catch (error) {
+      console.error("❌ Lỗi khôi phục sản phẩm:", error);
+      return res.status(500).json({
+        message: "Lỗi server khi khôi phục sản phẩm",
+      });
+    }
+  };
+
 }
 
 module.exports = new ProductController();
