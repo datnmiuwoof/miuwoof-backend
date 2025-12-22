@@ -27,14 +27,6 @@ const Post = sequelize.define('Post', {
         type: DataTypes.TEXT,
         allowNull: false,
     },
-    post_category_id: {
-        type: DataTypes.INTEGER.UNSIGNED,
-        allowNull: false,
-        references: {
-            model: 'post_category',
-            key: 'id',
-        }
-    },
     user_id: {
         type: DataTypes.INTEGER.UNSIGNED,
         allowNull: false,

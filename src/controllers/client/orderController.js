@@ -6,7 +6,6 @@ class orderController {
             const orderData = req.body;
             const userId = req.user.id;
 
-            console.log("xem sao", orderData)
             if (!orderData || Object.keys(orderData).length === 0 || !userId) {
                 return res.status(400).json({ message: "Dữ liệu đơn hàng không hợp lệ" });
             }

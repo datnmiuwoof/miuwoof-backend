@@ -26,6 +26,10 @@ const ProductVariants = sequelize.define('ProductVariants', {
         type: DataTypes.STRING(255),
         allowNull: true,
     },
+    sold_out: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
     import_price: {
         type: DataTypes.FLOAT,
         allowNull: true,

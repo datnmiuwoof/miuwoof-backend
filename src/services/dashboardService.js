@@ -6,7 +6,7 @@ const {
     address
 } = require("../models");
 
-const { Op } = require("sequelize"); // <-- Thêm dòng này
+const { Op } = require("sequelize");
 
 class DashboardService {
     async getOverview(startDate, endDate) {

@@ -450,14 +450,31 @@ class MomoService {
             );
 
             for (let items of order.OrderDetails) {
-                const variant = items.product_variant_id;
-                const quantity = items.quantity;
+                const variantId = items.product_variant_id;
+                const qty = items.quantity;
 
-                await product_variants.decrement('available_quantity', {
-                    by: quantity,
-                    where: { id: variant },
-                    transaction: t
+                const variant = await product_variants.findByPk(variantId, {
+                    transaction: t,
+                    lock: t.LOCK.UPDATE
                 });
+
+                if (!variant) {
+                    throw new Error('Variant not found');
+                }
+
+                if (variant.available_quantity < qty) {
+                    throw new Error('Out of stock');
+                }
+
+                const newQty = variant.available_quantity - qty;
+
+                await variant.update(
+                    {
+                        available_quantity: newQty,
+                        sold_out: newQty === 0
+                    },
+                    { transaction: t }
+                );
             }
 
             if (order.user_id) {

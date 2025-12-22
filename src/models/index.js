@@ -5,7 +5,6 @@ const product_image = require("./productImageModel");
 const category = require("./categoryModel");
 const product_variants = require("./productVariants");
 const post_model = require("./postModel");
-const post_category = require("./postCategoryModel");
 const favorite = require("./favoriteModel");
 const review = require("./reviewModel");
 const order_detail = require("./orderDetailModel");
@@ -19,7 +18,6 @@ const productDiscount = require("./productDiscountModel");
 const product_category = require("./productCategoryModel");
 const cart = require("./cartModel");
 const cart_item = require("./cartItemModel");
-const post_images = require("./post_images");
 
 // ======================== USER ========================
 user.hasMany(address, { foreignKey: "user_id" });
@@ -100,8 +98,6 @@ review.belongsTo(order_detail, { foreignKey: "order_detail_id" });
 
 
 // ======================== POST ========================
-post_model.belongsTo(post_category, { foreignKey: "post_category_id" });
-post_category.hasMany(post_model, { foreignKey: "post_category_id" });
 
 // post_images.hasMany(post_model, { foreignKey: "post_id" })
 // post_model.hasMany(post_images, { foreignKey: "post_id" })
@@ -167,7 +163,6 @@ module.exports = {
   category,
   product_variants,
   post_model,
-  post_category,
   favorite,
   review,
   order_detail,
